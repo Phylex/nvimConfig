@@ -1,42 +1,29 @@
-"set wildmenu                "enable ctrl-n and ctrl-p to scroll thru matches
-"set completeopt-=preview
-
 " deoplete options
 
-"let g:deoplete#enable_at_startup = 1
+" enable plugin at startup
+let g:deoplete#enable_at_startup = 1
 
-" Plugin key-mappings.
-" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
-"imap <C-k>     <Plug>(neosnippet_expand_or_jump)
-"smap <C-k>     <Plug>(neosnippet_expand_or_jump)
-"xmap <C-k>     <Plug>(neosnippet_expand_target)
+" set global deoplete options
+call deoplete#custom#option('auto_complete', 1) 
+call deoplete#custom#option('auto_complete_delay', 200)
+" trigger the completion menu by a keypress -> only complete
+" when I want the computer to help me
+call deoplete#custom#option('auto_complete_popup', 'auto')
+" when the completion menu is active the top completion results can be
+" selected by typing one of the markers
+call deoplete#custom#option('candidate_marks', ['A', 'S', 'D', 'F', 'G'])
+" bind the Keys to the insertion
+inoremap <expr>A pumvisible() ? deoplete#insert_candidate(0) : 'A'
+inoremap <expr>S pumvisible() ? deoplete#insert_candidate(1) : 'S'
+inoremap <expr>D pumvisible() ? deoplete#insert_candidate(2) : 'D'
+inoremap <expr>F pumvisible() ? deoplete#insert_candidate(3) : 'F'
+inoremap <expr>G pumvisible() ? deoplete#insert_candidate(4) : 'G'
 
-" SuperTab like snippets' behavior.
-" Note: It must be "imap" and "smap".  It uses <Plug> mappings.
-"imap <expr><TAB>
-" \ pumvisible() ? "\<C-n>" :
-" \ neosnippet#expandable_or_jumpable() ?
-" \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-"
-"smap <expr><TAB>
-" \ neosnippet#expandable_or_jumpable() ?
-" \    "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-"
-"imap <silent><expr><CR> pumvisible() ? deoplete#close_popup()."\<Plug>(neosnippet_expand_or_jump)" : "\<CR>"
-"
-""" For conceal markers.
-"if has('conceal')
-"  set conceallevel=2 concealcursor=niv
-"endif
-"
-""inoremap <silent><expr> <Tab>
-""            \ pumvisible() ? \<C-n>" : <Tab>"
-"
-"" Enable snipMate compatibility feature.
-"let g:neosnippet#enable_snipmate_compatibility = 1
-"let gneosnippet#snippets_directory='~/.nvim-plugins/vim-snippets/snippets'
-"
-"
-""deoplete-clang opions
-"let g:deoplete#sources#clang#libclang_path = "/usr/lib/libclang.so"
-"let g:deoplete#sources#clang#clang_header ="/usr/include/clang/"
+" limit the visible items in the list to 10
+call deoplete#custom#option('max_list', 10)
+
+" these are the sources that deoplete uses to do the completion
+call deoplete#custom#option('sources', { 'python': ['ale'] })
+
+" use more than one process if there is more than one completion source for deoplete
+call deoplete#custom#option('num_processes', 7)
