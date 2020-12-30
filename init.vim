@@ -5,44 +5,13 @@ Plug 'preservim/nerdtree'
 " Status line plugin
 Plug 'bling/vim-airline'
 
-
-" linting
+" linting and language server connection
 Plug 'dense-analysis/ale'
+
 " completion
-Plug 'neoclide/coc.nvim', {'branch': 'release'}
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 "Syntax highlighting
 Plug 'sirtaj/vim-openscad'
-
-" this plugin does python compleations
-Plug 'davidhalter/jedi-vim'
-
-" Old vim plugins are kept for compleation sake
-"Plug 'flazz/vim-colorschemes'
-"Plug 'freeo/vim-kalisi'
-"Plug 'nanotech/jellybeans.vim'
-"Plug 'tomasr/molokai'
-"Plug 'zyedidia/vim-snake'
-
-"Plug 'tpope/vim-fugitive'
-"Plug 'sheerun/vim-polyglot'
-"Plug 'benekastah/neomake'
-"Plug 'parnmatt/vim-root'
-
-"Plug 'lervag/vimtex'
-"Plug 'LaTeX-Box-Team/LaTeX-Box'
-
-" Autocompletion
-"Plug 'Shougo/deoplete.nvim'
-"Plug 'Shougo/neosnippet-snippets'
-"Plug 'honza/vim-snippets'
-"Plug 'zchee/deoplete-clang'
-"Plug 'zchee/deoplete-jedi'
-"Plug 'sebastianmarkow/deoplete-rust'
-"Plug 'jistr/vim-nerdtree-tabs'
-"Plug 'scrooloose/nerdtree'
-"Plug 'ctrlpvim/ctrlp.vim'
-""Plug 'rking/ag.vim'
-"Plug 'AndrewRadev/splitjoin.vim'
 
 "Plug 'tpope/vim-commentary'
 "Plug 'easymotion/vim-easymotion'
@@ -52,14 +21,32 @@ Plug 'davidhalter/jedi-vim'
 "
 " indentation
 "Plug 'nathanaelkane/vim-indent-guides'
-" Language syntax support
-"Plug 'lepture/vim-jinja'
-"Plug 'pangloss/vim-javascript'
-"Plug 'vim-python/python-syntax'
 call g:plug#end()
 
+" enable filetype detection?
 
-" include all the files in the conf.d directory
-for fpath in split(globpath('~/.config/nvim/conf.d', '*.vim'), '\n')
-  exe 'source' fpath
-endfor
+filetype plugin on
+" do the general configuration of nvim here
+exe 'source' '~/.config/nvim/conf.d/general.vim'
+" remember that coc configures itself through the configuration json file
+
+" configure ale
+exe 'source' '~/.config/nvim/conf.d/ale.vim'
+
+" configure deoplete
+exe 'source' '~/.config/nvim/conf.d/deoplete.vim'
+
+" configure airline
+exe 'source' '~/.config/nvim/conf.d/airline.vim'
+
+" map the bindings
+exe 'source' '~/.config/nvim/conf.d/mappings.vim'
+
+" map the abbreviations
+exe 'source' '~/.config/nvim/conf.d/abbreviations.vim'
+
+" include the autocommands set
+exe 'source' '~/.config/nvim/conf.d/autocmds.vim'
+
+" set the colors
+exe 'source' '~/.config/nvim/conf.d/appearance.vim'

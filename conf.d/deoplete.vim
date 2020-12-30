@@ -5,7 +5,7 @@ let g:deoplete#enable_at_startup = 1
 
 " set global deoplete options
 call deoplete#custom#option('auto_complete', 1) 
-call deoplete#custom#option('auto_complete_delay', 200)
+call deoplete#custom#option('auto_complete_delay', 50)
 " trigger the completion menu by a keypress -> only complete
 " when I want the computer to help me
 call deoplete#custom#option('auto_complete_popup', 'auto')
@@ -27,3 +27,7 @@ call deoplete#custom#option('sources', { 'python': ['ale'] })
 
 " use more than one process if there is more than one completion source for deoplete
 call deoplete#custom#option('num_processes', 7)
+
+" cycle through the entries with tab and shift tab
+inoremap <expr> <tab> pumvisible() ? "\<c-n>" : "\<tab>"
+inoremap <expr> <s-tab> pumvisible() ? "\<c-p>" : "\<tab>"

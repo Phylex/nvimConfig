@@ -2,10 +2,10 @@
 " tell nvim we are running in a full color terminal
 set termguicolors
 
+" set show the whitespaces in a file
+set list
 "set background color
 set background=dark
 
-" Disable the scrollbars (NERDTree)
-set guioptions-=r
-set guioptions-=L
+" set colorscheme
 colorscheme nabla
