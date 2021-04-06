@@ -23,3 +23,5 @@ call deoplete#custom#option('num_processes', 7)
 " cycle through the entries with tab and shift tab
 inoremap <expr> <tab> pumvisible() ? "\<c-n>" : "\<tab>"
 inoremap <expr> <s-tab> pumvisible() ? "\<c-p>" : "\<tab>"
+" use <enter> to select an item without adding a newline
+inoremap <expr> <CR> pumvisible() ? "\<c-y>" : "\<CR>"

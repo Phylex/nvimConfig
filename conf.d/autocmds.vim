@@ -14,13 +14,14 @@ augroup filetype_python
 	autocmd FileType python     nnoremap <buffer> <localleader>c I#<space><esc>
 	autocmd FileType python     call deoplete#enable()
 	autocmd FileType python     setlocal tabstop=4
-	autocmd FileType python     setlocal shiftwidth=2
+	autocmd FileType python     setlocal shiftwidth=4
 augroup END
 
 augroup filetype_email
 	autocmd!
 	autocmd FileType mail
 	autocmd FileType mail       setlocal textwidth=80
+	autocmd FileType mail       setlocal spelllang=de
 	autocmd FileType mail       call deoplete#disable()
 augroup END
 

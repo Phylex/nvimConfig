@@ -12,19 +12,6 @@
 let mapleader = "\<Space>"
 let maplocalleader = ";"
 
-nnoremap <localleader>a ihallowelt<esc>
-" disallow the use of the arrow keys
-nnoremap <up> <nop>
-inoremap <up> <nop>
-nnoremap <down> <nop>
-inoremap <down> <nop>
-inoremap <left> <nop>
-inoremap <right> <nop>
-
-" switch buffers with arrow keys
-nnoremap <right> :bp<CR>
-nnoremap <left> :bn<CR>
-
 " Map WQ and W, Q so they are actually useful
 :command WQ wq
 :command Wq wq
@@ -60,3 +47,6 @@ nnoremap <leader>lc :source $MYVIMRC<cr>
 
 " encase the visually selected area into '<' '>'
 vnoremap <leader>< <esc>`<i<<esc>`>la><esc>
+
+nnoremap <leader>lb jxi<enter><esc>$
+nmap <F8> :TagbarToggle<CR>
