@@ -4,7 +4,7 @@ let g:ale_lint_on_insert_leave = 1
 let g:ale_lint_on_save = 1
 let g:ale_virtualtext_cursor = 1
 let g:ale_linters = {
-			\'python': ['pylint', 'flake8', 'pyls'],
+			\'python': ['pylint', 'flake8', 'pylsp'],
 			\'rust': ['rust-analyzer', 'cargo'],
 			\'java': ['checkstyle'],
 			\'cpp': ['clangd', 'clangtidy']}
