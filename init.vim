@@ -10,9 +10,17 @@ Plug 'dense-analysis/ale'
 
 " completion
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'deoplete-plugins/deoplete-clang'
+
 "Syntax highlighting
 Plug 'sirtaj/vim-openscad'
+Plug 'dag/vim-fish'
+Plug 'bfrg/vim-cpp-modern'
 
+Plug 'preservim/tagbar'
+
+Plug 'rust-lang/rust.vim'
+Plug 'tikhomirov/vim-glsl'
 "Plug 'tpope/vim-commentary'
 "Plug 'easymotion/vim-easymotion'
 "Plug 'terryma/vim-multiple-cursors'
@@ -23,9 +31,9 @@ Plug 'sirtaj/vim-openscad'
 "Plug 'nathanaelkane/vim-indent-guides'
 call g:plug#end()
 
-" enable filetype detection?
-
+" enable filetype detection
 filetype plugin on
+
 " do the general configuration of nvim here
 exe 'source' '~/.config/nvim/conf.d/general.vim'
 " remember that coc configures itself through the configuration json file
@@ -50,3 +58,4 @@ exe 'source' '~/.config/nvim/conf.d/autocmds.vim'
 
 " set the colors
 exe 'source' '~/.config/nvim/conf.d/appearance.vim'
+silent! source .vimlocal
