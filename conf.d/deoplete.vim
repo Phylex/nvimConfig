@@ -20,6 +20,12 @@ call deoplete#custom#option('sources', { 'python': ['ale'] })
 " use more than one process if there is more than one completion source for deoplete
 call deoplete#custom#option('num_processes', 7)
 
+" load the variables for deoplete-clang
+let g:deoplete#sources#clang#libclang_path = '/usr/lib/libclang.so'
+let g:deoplete#sources#clang#clang_header = '/usr/lib/clang'
+let g:deoplete#sources#clang#std = {'c': 'c11', 'cpp':'c++1z'}
+let g:deoplete#sources#clang#include_default_argumets = 'True'
+
 " cycle through the entries with tab and shift tab
 inoremap <expr> <tab> pumvisible() ? "\<c-n>" : "\<tab>"
 inoremap <expr> <s-tab> pumvisible() ? "\<c-p>" : "\<tab>"
