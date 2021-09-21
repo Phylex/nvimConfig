@@ -7,5 +7,7 @@ set list
 "set background color
 set background=dark
 
+au BufNewFile,BufRead *.madx,*.seq,*.str,*.mask setf madx
+
 " set colorscheme
 colorscheme nabla
