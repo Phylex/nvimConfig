@@ -9,3 +9,9 @@ let g:ale_linters = {
 			\'java': ['checkstyle'],
 			\'cpp': ['clangd', 'clangtidy']}
 let g:ale_c_parse_compile_commands = 1
+let g:ale_fixers = {
+\   '*': ['remove_trailing_lines', 'trim_whitespace'],
+\	'cpp': ['clang-format'],
+\	'python': ['autopep8'],
+\   'javascript': ['eslint'],
+\}
