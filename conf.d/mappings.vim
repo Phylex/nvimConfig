@@ -28,7 +28,7 @@ nnoremap <leader>r ct_
 map <F1> <Esc>
 imap <F1> <Esc>
 " map the opening bracket to do the opposite of the closing
-" bracket
+" bracket in the vim help
 nnoremap <c-[> <c-o>
 
 " the capslock is remapped in sway as it can't be remapped in
@@ -48,5 +48,13 @@ nnoremap <leader>lc :source $MYVIMRC<cr>
 " encase the visually selected area into '<' '>'
 vnoremap <leader>< <esc>`<i<<esc>`>la><esc>
 
+" insert a new line in between two lines
 nnoremap <leader>lb jxi<enter><esc>$
+
+" switch off highlighting
+noremap <leader>h :noh<CR>
+
+" open Tagbar at the right hand side
 nmap <F8> :TagbarToggle<CR>
+" open nerdtree with a single keystroke
+nmap <F2> :NERDTreeToggle<CR>
