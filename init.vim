@@ -2,6 +2,7 @@ call g:plug#begin('~/.config/nvim/plugins')
 
 " Directory searcher
 Plug 'preservim/nerdtree'
+Plug 'junegunn/fzf'
 " Status line plugin
 Plug 'bling/vim-airline'
 
