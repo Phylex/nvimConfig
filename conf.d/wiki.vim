@@ -1,7 +1,7 @@
 " Configure vimwiki to create a wiki at ~/wiki with the html in /wiki/html
 let wiki = {}
-let wiki.path = '~/wiki'
-let wiki.public_html = '~/wiki/html'
+let wiki.path = '~/cern/wiki'
+let wiki.public_html = '~/cern/wiki/html'
 let wiki.auto_export = 1
 let wiki.auto_toc = 1
 let wiki.index = 'index'

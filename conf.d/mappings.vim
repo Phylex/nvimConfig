@@ -22,7 +22,7 @@ let maplocalleader = ";"
 nnoremap <leader><leader> <c-^>
 
 " replace all of the name until next '_'
-nnoremap <leader>r ct_
+nnoremap <leader>_ ct_
 
 " prevent an accidental strike of <F1> from opening help
 map <F1> <Esc>
@@ -58,3 +58,5 @@ noremap <leader>h :noh<CR>
 nmap <F8> :TagbarToggle<CR>
 " open nerdtree with a single keystroke
 nmap <F2> :NERDTreeToggle<CR>
+" open fzf without needing the command
+nmap <F3> :FZF<CR>
