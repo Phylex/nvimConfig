@@ -22,11 +22,10 @@ Plug 'preservim/tagbar'
 
 Plug 'rust-lang/rust.vim'
 Plug 'tikhomirov/vim-glsl'
-"Plug 'tpope/vim-commentary'
-"Plug 'easymotion/vim-easymotion'
-"Plug 'terryma/vim-multiple-cursors'
-"Plug 'Raimondi/delimitMate'
 "Plug 'rsmenon/vim-mathematica'
+
+Plug 'sirver/ultisnips'
+Plug 'honza/vim-snippets'
 "
 " indentation
 "Plug 'nathanaelkane/vim-indent-guides'
@@ -60,3 +59,5 @@ exe 'source' '~/.config/nvim/conf.d/autocmds.vim'
 " set the colors
 exe 'source' '~/.config/nvim/conf.d/appearance.vim'
 silent! source .vimlocal
+
+exe 'source' '~/.config/nvim/conf.d/ultisnips.vim'

@@ -31,10 +31,6 @@ imap <F1> <Esc>
 " bracket in the vim help
 nnoremap <c-[> <c-o>
 
-" the capslock is remapped in sway as it can't be remapped in
-" nvim because it is a system wide thing
-nnoremap <leader><leader> dd
-
 " spell checking remap so that control-l jumps to the last typo and inserts
 " the first recommendation in it's place
 inoremap <C-l> <c-g>u<Esc>[s1z=`]a<c-g>u

@@ -15,7 +15,12 @@ call deoplete#custom#option('auto_complete_popup', 'auto')
 call deoplete#custom#option('max_list', 10)
 
 " these are the sources that deoplete uses to do the completion
-call deoplete#custom#option('sources', { 'python': ['ale'] })
+call deoplete#custom#option('sources', {
+			\ 'python': ['ale', 'ultisnips', 'buffer'],
+			\ 'cpp': ['ale', 'ultisnips', 'buffer'],
+			\ '_': ['ale', 'ultisnips', 'buffer'],
+			\})
+
 
 " use more than one process if there is more than one completion source for deoplete
 call deoplete#custom#option('num_processes', 7)
