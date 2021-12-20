@@ -17,15 +17,19 @@ Plug 'deoplete-plugins/deoplete-clang'
 Plug 'sirtaj/vim-openscad'
 Plug 'dag/vim-fish'
 Plug 'bfrg/vim-cpp-modern'
-
-Plug 'preservim/tagbar'
-
 Plug 'rust-lang/rust.vim'
 Plug 'tikhomirov/vim-glsl'
+
+" a tag bar that gives you an overview of c++ and python code
+Plug 'preservim/tagbar'
+
 "Plug 'rsmenon/vim-mathematica'
 
+" Snippets
 Plug 'sirver/ultisnips'
 Plug 'honza/vim-snippets'
+
+Plug 'lervag/vimtex'
 "
 " indentation
 "Plug 'nathanaelkane/vim-indent-guides'
@@ -60,4 +64,8 @@ exe 'source' '~/.config/nvim/conf.d/autocmds.vim'
 exe 'source' '~/.config/nvim/conf.d/appearance.vim'
 silent! source .vimlocal
 
+" set the snippet stuff
 exe 'source' '~/.config/nvim/conf.d/ultisnips.vim'
+
+" set up vimtex
+exe 'source' '~/.config/nvim/conf.d/vimtex.vim'
