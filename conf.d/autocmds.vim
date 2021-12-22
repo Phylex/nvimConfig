@@ -37,3 +37,9 @@ augroup filetype_markdown
 	autocmd FileType markdown   iabbrev <buffer> )) \\)
 	autocmd FileType markdown   call deoplete#disable()
 augroup END
+
+augroup filetype_tex
+	autocmd!
+	autocmd FileType tex      setlocal textwidth=80
+	autocmd FileType tex      setlocal spelllang=de
+augroup END
