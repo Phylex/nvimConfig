@@ -3,7 +3,8 @@ local M = {}
 M.styles_list = { 'dark', 'darker', 'cool', 'deep', 'warm', 'warmer', 'light', 'neon'}
 
 ---Change onedark option (vim.g.onedark_config.option)
----It can't be changed directly by modifing that field due to a Neovim lua bug with global variables (onedark_config is a global variable)
+---helper function for setting options
+---It can't be changed directly by modifing that field due to a Neovim lua bug with global variables (nabla_config is a global variable)
 ---@param opt string: option name
 ---@param value any: new value
 function M.set_options(opt, value)
@@ -14,14 +15,19 @@ end
 
 ---Apply the colorscheme (same as ':colorscheme onedark')
 function M.colorscheme()
+    -- remove the old colorscheme
     vim.cmd("hi clear")
     if vim.fn.exists("syntax_on") then vim.cmd("syntax reset") end
+
+    -- set options of the colorscheme
     vim.o.termguicolors = true
     vim.g.colors_name = "nabla"
+    -- set the background dark, as we do not currently support
+    -- a light variant of the theme
     if vim.o.background == 'light' then
-        M.set_options('style', 'light')
-    elseif vim.g.nabla_config.style == 'light' then
-        M.set_options('style', 'dark')
+        vim.o.background = 'dark'
+        -- currently we use the 'neon' style
+        M.set_options('style', 'neon')
     end
     require('nabla.highlights').setup()
     require('nabla.terminal').setup()

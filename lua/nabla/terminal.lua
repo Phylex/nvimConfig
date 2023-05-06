@@ -1,3 +1,5 @@
+-- Module to set the colors that corespond to the ansi terminal 
+
 local M = {}
 local cfg = vim.g.nabla_config
 local c = require 'nabla.colors'

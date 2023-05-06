@@ -373,7 +373,13 @@ rt = require('rust-tools')
 rt.setup({
   server = {
     standalone = true,
-    on_attach = on_attach,
+    on_attach = function (_, bufnr)
+      on_attach(_, bufnr)
+        -- Hover actions
+      vim.keymap.set("n", "<leader>ha", rt.hover_actions.hover_actions, { buffer = bufnr })
+      -- Code action groups
+      vim.keymap.set("n", "<leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
+    end
   },
 })
 vim.keymap.set('n', '<leader>he', rt.inlay_hints.enable)
