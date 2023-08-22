@@ -1,8 +1,11 @@
+-- Set of utility functions that help with color related operations like converting hex value strings
+-- to actual RGB tuples 
 local util = {}
 
 util.bg = "#000000"
 util.fg = "#ffffff"
 
+--- Convert the String encoding the hex color value into a tuple of r, g, b numbers
 local function hexToRgb(hex_str)
   local hex = "[abcdef0-9][abcdef0-9]"
   local pat = "^#(" .. hex .. ")(" .. hex .. ")(" .. hex .. ")$"
@@ -14,6 +17,9 @@ local function hexToRgb(hex_str)
   return { tonumber(r, 16), tonumber(g, 16), tonumber(b, 16) }
 end
 
+---Blend any color with the background to make it darker and with the foreground to make
+---it lighter (in dark mode) and vice versa in light mode.
+---This code is needed to be able to switch between the light and dark modes.
 ---@param fg string foreground color
 ---@param bg string background color
 ---@param alpha number number between 0 and 1. 0 results in bg, 1 results in fg

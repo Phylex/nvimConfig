@@ -18,6 +18,7 @@ vim.filetype.add({
 require('packer').startup(function(use)
   -- Package manager
   use 'wbthomason/packer.nvim'
+  use 'chrisbra/Colorizer'
 
   use { -- LSP Configuration & Plugins
     'neovim/nvim-lspconfig',
@@ -26,14 +27,22 @@ require('packer').startup(function(use)
       'williamboman/mason.nvim',
       'williamboman/mason-lspconfig.nvim',
 
-      -- Useful status updates for LSP
-      'j-hui/fidget.nvim',
 
+      -- look at nvim-tree/nvim-tree.lua repository if I want a 
+      -- tui file browser even though the telescope one is already pretty neat
       -- Additional lua configuration, makes nvim stuff amazing
       'folke/neodev.nvim',
     },
   }
-  use 'simrat39/rust-tools.nvim'
+  -- Useful status updates for LSP
+  use {
+    'j-hui/fidget.nvim',
+    tag = 'legacy',
+  }
+  use { 'simrat39/rust-tools.nvim', requires = {'nvim-lua/plenary.nvim' } }
+
+  -- debugging
+  use 'mfussenegger/nvim-dap'
 
   use { -- Autocompletion
     'hrsh7th/nvim-cmp',
@@ -137,9 +146,6 @@ vim.wo.signcolumn = 'yes'
 
 -- Set colorscheme
 vim.o.termguicolors = true
-require('nabla').setup {
-  style = 'neon'
-}
 require('nabla').load()
 
 -- Set completeopt to have a better completion experience
@@ -314,7 +320,7 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
 
 -- LSP settings.
 --  This function gets run when an LSP connects to a particular buffer.
-local on_attach = function(_, bufnr)
+local on_attach = function(client, bufnr)
   -- NOTE: Remember that lua is a real programming language, and as such it is possible
   -- to define small helper and utility functions so you don't have to repeat yourself
   -- many times.
@@ -331,6 +337,7 @@ local on_attach = function(_, bufnr)
 
   nmap('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
   nmap('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
+  nmap('<leader>ha', vim.lsp.buf.hover, '[H]over [A]ction')
 
   nmap('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
   nmap('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -359,33 +366,58 @@ end
 
 -- Enable the following language servers
 --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-
--- rust-tools configures nvim-lsp for us
---require('lspconfig').rust_analyzer.setup {
---  -- this function is run as soon as we attach to the language server (in this case rust analyzer)
---  on_attach = on_attach
---}
 require('lspconfig').pylsp.setup {
-  on_attach = on_attach
+  on_attach = on_attach,
 }
+
+
+-- RUST setup -------------------------------------------------
+
+-- So a note on configuration here There are two options (that are 'easy to use')
+-- The first option is to :
+
+-- require('lspconfig').rust_analyzer.setup {
+--   capabilities = capabilities,
+--   on_attach = on_attach,
+--   cmd = {"rust-analyzer"},
+-- }
+
+-- I don't actually want the lsp highlight groups to show
+-- for _, group in ipairs(vim.fn.getcompletion("@lsp", "highlight")) do
+--   vim.api.nvim_set_hl(0, group, {})
+-- end
+
+-- Set the priority of the treesitter highlights over the semantic_tokens
+vim.highlight.priorities.treesitter = 100
+vim.highlight.priorities.semantic_tokens = 99
 
 rt = require('rust-tools')
 rt.setup({
   server = {
+    on_attach = on_attach
+  },
+})
+rt.setup({
+  tools = {
+    inlay_hints = {
+      parameter_hints_prefix = "<-- ",
+    }
+  },
+  server = {
     standalone = true,
     on_attach = function (_, bufnr)
-      on_attach(_, bufnr)
         -- Hover actions
       vim.keymap.set("n", "<leader>ha", rt.hover_actions.hover_actions, { buffer = bufnr })
       -- Code action groups
       vim.keymap.set("n", "<leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
+      -- configure inlay hoints
+      vim.keymap.set('n', '<leader>he', rt.inlay_hints.enable)
+      vim.keymap.set('n', '<leader>hd', rt.inlay_hints.disable)
+      on_attach(_, bufnr)
     end
   },
 })
-vim.keymap.set('n', '<leader>he', rt.inlay_hints.enable)
-vim.keymap.set('n', '<leader>hd', rt.inlay_hints.disable)
 
---
 --  Add any additional override configuration in the following tables. They will be passed to
 --  the `settings` field of the server config. You must look up that documentation yourself.
 local servers = {
@@ -431,7 +463,9 @@ mason_lspconfig.setup_handlers {
 }
 
 -- Turn on lsp status information
-require('fidget').setup()
+require('fidget').setup {
+  tag = 'legacy',
+}
 
 -- nvim-cmp setup
 local cmp = require 'cmp'
