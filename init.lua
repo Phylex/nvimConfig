@@ -42,7 +42,7 @@ require('packer').startup(function(use)
   use { 'simrat39/rust-tools.nvim', requires = {'nvim-lua/plenary.nvim' } }
 
   -- debugging
-  use 'mfussenegger/nvim-dap'
+  use { 'rcarriga/nvim-dap-ui', requires = {'mfussenegger/nvim-dap'} }
 
   use { -- Autocompletion
     'hrsh7th/nvim-cmp',
@@ -74,10 +74,11 @@ require('packer').startup(function(use)
   use 'tpope/vim-rhubarb'
   use 'lewis6991/gitsigns.nvim'
 
-  use 'navarasu/onedark.nvim' -- Theme inspired by Atom
-  use 'nvim-lualine/lualine.nvim' -- Fancier statusline
-  use 'lukas-reineke/indent-blankline.nvim' -- Add indentation guides even on blank lines
+  -- makes commenting easier
   use 'numToStr/Comment.nvim' -- "gc" to comment visual regions/lines
+
+  use 'nvim-lualine/lualine.nvim' -- Fancier statusline
+  -- use 'lukas-reineke/indent-blankline.nvim' -- Add indentation guides even on blank lines
   use 'tpope/vim-sleuth' -- Detect tabstop and shiftwidth automatically
 
   -- Fuzzy Finder (files, lsp, etc)
@@ -193,10 +194,7 @@ require('Comment').setup()
 
 -- Enable `lukas-reineke/indent-blankline.nvim`
 -- See `:help indent_blankline.txt`
-require('indent_blankline').setup {
-  char = '┊',
-  show_trailing_blankline_indent = false,
-}
+-- require'ibl'.setup()
 
 -- Gitsigns
 -- See `:help gitsigns.txt`
@@ -318,7 +316,10 @@ vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float)
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist)
 
--- LSP settings.
+-- Setup neodev before setting up the lsp client
+require('neodev').setup()
+
+-- Set up the LSP
 --  This function gets run when an LSP connects to a particular buffer.
 local on_attach = function(client, bufnr)
   -- NOTE: Remember that lua is a real programming language, and as such it is possible
@@ -366,9 +367,6 @@ end
 
 -- Enable the following language servers
 --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-require('lspconfig').pylsp.setup {
-  on_attach = on_attach,
-}
 
 
 -- RUST setup -------------------------------------------------
@@ -424,6 +422,26 @@ local servers = {
   -- clangd = {},
   -- gopls = {},
   -- pyright = {},
+  pylsp = { 
+    pylsp = {
+      plugins = {
+        -- enable mypy hints and jedi completion
+        pylsp_mypy = { enabled = true },
+        jedi_completion = { enabled = true },
+
+        yapf = { enabled = false },
+        -- disable linting except for black
+        autopep8 = { enabled = false},
+        pycodestyle = { enabled = true, maxLineLength = 100, ignore = {'W219', 'E261'}},
+        mccabe = { enabled = false},
+        flake8 = { enabled = false},
+        pyflakes = {enabled = false },
+        pylint = { enabled = false, executable = "pylint" },
+        black = { enabled = false, line_length = 100},
+      }
+    }
+  },
+}
   -- rust_analyzer = {},
   -- tsserver = {},
 
@@ -433,11 +451,7 @@ local servers = {
   --     telemetry = { enable = false },
   --   },
   -- },
-}
 
--- Setup neovim lua configuration
-require('neodev').setup()
---
 -- nvim-cmp supports additional completion capabilities, so broadcast that to servers
 local capabilities = vim.lsp.protocol.make_client_capabilities()
 capabilities = require('cmp_nvim_lsp').default_capabilities(capabilities)

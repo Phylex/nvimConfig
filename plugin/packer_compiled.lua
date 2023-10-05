@@ -74,6 +74,11 @@ end
 time([[try_loadstring definition]], false)
 time([[Defining packer_plugins]], true)
 _G.packer_plugins = {
+  Colorizer = {
+    loaded = true,
+    path = "/home/nabla/.local/share/nvim/site/pack/packer/start/Colorizer",
+    url = "https://github.com/chrisbra/Colorizer"
+  },
   ["Comment.nvim"] = {
     loaded = true,
     path = "/home/nabla/.local/share/nvim/site/pack/packer/start/Comment.nvim",
@@ -159,6 +164,11 @@ _G.packer_plugins = {
     path = "/home/nabla/.local/share/nvim/site/pack/packer/start/nvim-cmp",
     url = "https://github.com/hrsh7th/nvim-cmp"
   },
+  ["nvim-dap"] = {
+    loaded = true,
+    path = "/home/nabla/.local/share/nvim/site/pack/packer/start/nvim-dap",
+    url = "https://github.com/mfussenegger/nvim-dap"
+  },
   ["nvim-lspconfig"] = {
     loaded = true,
     path = "/home/nabla/.local/share/nvim/site/pack/packer/start/nvim-lspconfig",
@@ -197,7 +207,7 @@ _G.packer_plugins = {
     url = "https://github.com/simrat39/rust-tools.nvim"
   },
   ["telescope-fzf-native.nvim"] = {
-    cond = { true },
+    cond = { false },
     loaded = false,
     needs_bufread = false,
     only_cond = true,
