@@ -19,6 +19,7 @@ return {
 		fg_2 =              "#455574",
 		fg_3 =              "#6c7d9c",
 		fg_4 =              "#1c4a6e",
+		fg_5 =              "#1f5a8e",
 
 		blue_01 =	    "#BEE6FF",
 		blue_02 =	    "#80CDFF",

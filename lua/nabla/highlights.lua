@@ -94,7 +94,7 @@ hl.common = {
 }
 
 hl.syntax = {
-    String =                            {fg = c.fg_4, fmt = cfg.code_style.strings},
+    String =                            {fg = c.fg_5, fmt = cfg.code_style.strings},
     Character =                         {fg = c.blue_04},
     Number =                            {fg = c.yellow_6},
     Float =                             {fg = c.yellow_5},
@@ -157,7 +157,7 @@ if vim.api.nvim_call_function("has", { "nvim-0.8" }) == 1 then
         ["@field"] =                    {fg = c.green_04},
         ["@string.regex"] =             {fg = c.fg, fmt = cfg.code_style.strings},
         ["@string.escape"] =            {fg = c.fg, fmt = cfg.code_style.strings},
-        ["@attribute"] =                {fg = c.fg},
+        ["@attribute"] =                {fg = c.blue_13},
         ["@boolean"] =                  hl.syntax.Boolean,
         ["@number"] =                   hl.syntax.Number,
         ["@float"] =                    hl.syntax.Float,
