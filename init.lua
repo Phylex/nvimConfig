@@ -429,15 +429,15 @@ local servers = {
         pylsp_mypy = { enabled = true },
         jedi_completion = { enabled = true },
 
-        yapf = { enabled = false },
+        yapf = { enabled = true },
         -- disable linting except for black
-        autopep8 = { enabled = false},
+        autopep8 = { enabled = true },
         pycodestyle = { enabled = true, maxLineLength = 100, ignore = {'W219', 'E261'}},
-        mccabe = { enabled = false},
+        mccabe = { enabled = true},
         flake8 = { enabled = false},
-        pyflakes = {enabled = false },
-        pylint = { enabled = false, executable = "pylint" },
-        black = { enabled = false, line_length = 100},
+        pyflakes = {enabled = true },
+        pylint = { enabled = true, executable = "pylint" },
+        black = { enabled = true, line_length = 100},
       }
     }
   },
