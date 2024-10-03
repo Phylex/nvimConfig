@@ -58,7 +58,7 @@ hl.common = {
     WarningMsg =                {fg = c.yellow_6, fmt = "bold"},
     MoreMsg =                   {fg = c.seaside_1, fmt = "bold"},
     IncSearch =                 {fg = c.bg0, bg = c.orange},
-    Search =                    {fg = c.bg0, bg = c.bg_yellow},
+    Search =                    {fg = c.blue_1, bg = c.bg_yellow},
     Substitute =                {fg = c.bg0, bg = c.green},
     MatchParen =                {fg = c.purple_7, bg = c.grey},
     NonText =                   {fg = c.grey},
@@ -149,7 +149,7 @@ if vim.api.nvim_call_function("has", { "nvim-0.8" }) == 1 then
         ["@storageclass"] =             {fg = c.purple_12},
         ["@type.builtin"] =             {fg = c.green_11},
         ["@operator"] =                 {fg = c.seaside_4},
-        ["@property"] =                 {fg = c.fg},
+        ["@property"] =                 {fg = c.green01},
         
         -- builtin type highlights
         ["@type"] =                     hl.syntax.Type,
@@ -307,7 +307,7 @@ else
         TSOperator =                {fg = c.fg},
         TSParameter =               {fg = c.fg},
         TSParameterReference =      {fg = c.fg},
-        TSProperty =                {fg = c.fg},
+        TSProperty =                {fg = c.green_01},
         TSPunctDelimiter =          {fg = c.fg},
         TSPunctBracket =            {fg = c.fg},
         TSPunctSpecial =            {fg = c.fg},
