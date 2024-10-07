@@ -46,7 +46,7 @@ vim.opt.inccommand = 'split'
 
 -- characters to make whitespace visible
 vim.opt.list = true
-vim.opt.listchars = { tab = '| ', trail = '.', nbsp = '␣' }
+vim.opt.listchars = { tab = '| ', trail = '·', nbsp = '␣' }
 
 -- show the line of the cursor
 vim.opt.cursorline = false
@@ -386,19 +386,6 @@ require('lazy').setup({
           { name = 'luasnip' },
           { name = 'path', max_item_count = 5},
           { name = 'buffer', max_item_count = 5, keyword_length = 5, },
-        },
-        formatting = {
-          format = lspkind.cmp_format({
-            mode = 'symbol_text',
-            maxwidth = 50,
-            -- menu = {
-            --   buffer = '[buf]',
-            --   nvim_lsp = '[LSP]',
-            --   path = '[path]',
-            --   luasnip = '[snip]',
-            -- }
-            ellipsis_char = '...',
-          })
         },
         window = {
           completion = cmp.config.window.bordered(),
