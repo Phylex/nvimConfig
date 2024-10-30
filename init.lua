@@ -262,7 +262,7 @@ require('lazy').setup({
               callback = vim.lsp.buf.document_highlight,
             })
 
-            vim .api.create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
+            vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
               buffer = event.buf,
               group = highlight_augroup,
               callback = vim.lsp.buf.clear_references,
@@ -398,15 +398,15 @@ require('lazy').setup({
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
     opts = {
-      ensure_installed = { 'c', 'wgsl', 'cpp', 'html', 'toml', 'lua', 'python', 'rust', 'vim' },
+      ensure_installed = { 'c', 'wgsl', 'cpp', 'html', 'toml', 'lua', 'python', 'rust', 'vim', 'markdown', 'xml' },
 
-      highlight = { 
+      auto_install = true,
+      highlight = {
         enable = true,
-        additional_vim_regex_highlighting=false,
+        additional_vim_regex_highlighting= { 'xml', 'kcd' },
       },
       indent = {
         enable = true,
-        disable = { 'python' },
       },
       incremental_selection = {
         enable = true,
@@ -461,7 +461,11 @@ require('lazy').setup({
           },
         },
       },
-    }
+    },
+    config = function(_, opts)
+      require('nvim-treesitter.install').prefer_git = true
+      require('nvim-treesitter.configs').setup(opts)
+    end,
   },
 })
 
