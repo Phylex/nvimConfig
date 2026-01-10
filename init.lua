@@ -218,17 +218,15 @@ require('lazy').setup({
             mode = mode or 'n'
             vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
-          map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
-          map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
-          map('<leader>ha', vim.lsp.buf.hover, '[H]over [A]ction')
+          map('gn', vim.lsp.buf.rename, '[R]e[n]ame')
+          map('ga', vim.lsp.buf.code_action, '[C]ode [A]ction')
+          map('gh', vim.lsp.buf.hover, '[H]over [A]ction')
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-
-          map('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
+          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
           map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+          map('gt', require('telescope.builtin').lsp_type_definitions, '[G]oto [R]eferences')
           map('gi', vim.lsp.buf.implementation, '[G]oto [I]mplementation')
-          map('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
-          map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
-          map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('gs', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
 
           -- See `:help K` for why this keymap
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
@@ -237,8 +235,6 @@ require('lazy').setup({
           -- Lesser used LSP functionality
           map('<leader>wa', vim.lsp.buf.add_workspace_folder, '[W]orkspace [A]dd Folder')
           map('<leader>wr', vim.lsp.buf.remove_workspace_folder, '[W]orkspace [R]emove Folder')
-          map('<leader>wl', function()
-          end, '[W]orkspace [L]ist Folders')
 
           local function client_supports_method(client, method, bufnr)
             if vim.fn.has 'nvim-0.11' == 1 then
@@ -250,7 +246,7 @@ require('lazy').setup({
 
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client_supports_method(client, vim.lsp.protocol.Methods.textDocument_documentHighlight, event.buf) then
-            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
+            local highlight_augroup = vim.api.nvim_create_augroup('lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
               group = highlight_augroup,
@@ -264,10 +260,10 @@ require('lazy').setup({
             })
 
             vim.api.nvim_create_autocmd('LspDetach', {
-              group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
+              group = vim.api.nvim_create_augroup('lsp-detach', { clear = true }),
               callback = function(event2)
                 vim.lsp.buf.clear_references()
-                vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
+                vim.api.nvim_clear_autocmds { group = 'lsp-highlight', buffer = event2.buf }
               end,
             })
           end
@@ -285,6 +281,9 @@ require('lazy').setup({
         vim.lsp.config(server_name, server_config)
       end
       merge_blink_capabilities('clangd')
+      local clangd_config = vim.lsp.config['clangd']
+      clangd_config.cmd = { 'clangd', "--query-driver='/bin/arm-none-eabi-**'", '--background-index', '--clang-tidy'}
+      vim.lsp.config('clangd', clangd_config)
       vim.lsp.enable('clangd')
       merge_blink_capabilities('pylsp')
       vim.lsp.enable('pylsp')
@@ -463,19 +462,6 @@ require('lazy').setup({
       require('nvim-treesitter.configs').setup(opts)
     end,
   },
-})
-
--- Add key bindings when an lsp is available
-
--- [[ Highlight on yank ]]
--- See `:help vim.highlight.on_yank()`
-local highlight_group = vim.api.nvim_create_augroup('YankHighlight', { clear = true })
-vim.api.nvim_create_autocmd('TextYankPost', {
-  callback = function()
-    vim.highlight.on_yank()
-  end,
-  group = highlight_group,
-  pattern = '*',
 })
 
 ------------------------ Plugin configuration --------------------------------
