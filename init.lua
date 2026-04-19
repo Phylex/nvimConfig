@@ -12,6 +12,9 @@ vim.opt.number = true
 -- Enable mouse mode
 vim.opt.mouse = 'a'
 
+-- coppy indentation from previous line when <CR> or o/O
+vim.opt.autoindent = true
+
 -- show mode under the status line (we don't need that)
 vim.opt.showmode = false
 
@@ -52,7 +55,7 @@ vim.opt.listchars = { tab = '| ', trail = '·', nbsp = '␣' }
 vim.opt.cursorline = false
 
 -- number of lines to keep below/above the cursor
-vim.opt.scrolloff = 8
+vim.opt.scrolloff = 4
 
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -136,6 +139,10 @@ require('lazy').setup({
     },
   },
 
+  {
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' }
+  },
   {
     -- telescope is a fuzzy finder that has lots of useful features around
     -- finding files and symbols/text within files (among other things)

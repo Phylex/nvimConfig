@@ -78,7 +78,6 @@ function M.colorscheme()
         -- currently we use the 'neon' style
         M.set_options('style', 'neon')
     end
-    
     -- run the code in the other modules
     require('nabla.highlights').setup()
     require('nabla.terminal').setup()
