@@ -7,8 +7,6 @@ local c = require('nabla.colors')
 local cfg = vim.g.nabla_config
 local util = require("nabla.util")
 
-print(c)
-
 local M = {}
 --- Dictionary containing the highlighting rules for the different
 --- Languages

@@ -471,82 +471,9 @@ require('lazy').setup({
   },
 })
 
------------------------- Plugin configuration --------------------------------
-
--- require("aerial").setup({
---   -- optionally use on_attach to set keymaps when aerial has attached to a buffer
---   on_attach = function(bufnr)
---     -- Jump forwards/backwards with '{' and '}'
---     vim.keymap.set("n", "{", "<cmd>AerialPrev<CR>", { buffer = bufnr })
---     vim.keymap.set("n", "}", "<cmd>AerialNext<CR>", { buffer = bufnr })
---   end,
--- })
--- -- You probably also want to set a keymap to toggle aerial
--- vim.keymap.set("n", "<leader>a", "<cmd>AerialToggle!<CR>")
--- 
--- -- Set lualine as statusline
--- -- See `:help lualine.txt`
--- require('lualine').setup {
---   options = {
---     icons_enabled = false,
---     theme = 'nabla',
---     component_separators = '|',
---     section_separators = '>',
---   },
--- }
-
--- Enable `lukas-reineke/indent-blankline.nvim`
--- See `:help indent_blankline.txt`
--- require'ibl'.setup()
-
-
--- Enable the following language servers
---  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
-
-
--- RUST setup -------------------------------------------------
-
--- So a note on configuration here There are two options (that are 'easy to use')
--- The first option is to :
-
--- require('lspconfig').rust_analyzer.setup {
---   capabilities = capabilities,
---   on_attach = on_attach,
---   cmd = {"rust-analyzer"},
--- }
-
--- I don't actually want the lsp highlight groups to show
--- for _, group in ipairs(vim.fn.getcompletion("@lsp", "highlight")) do
---   vim.api.nvim_set_hl(0, group, {})
--- end
-
 -- Set the priority of the treesitter highlights over the semantic_tokens
 vim.highlight.priorities.treesitter = 100
 vim.highlight.priorities.semantic_tokens = 99
 
--- rt = require('rust-tools')
--- rt.setup({
---   server = {
---     on_attach = on_attach
---   },
--- })
--- rt.setup({
---   tools = {
---     inlay_hints = {
---       parameter_hints_prefix = "<-- ",
---     }
---   },
---   server = {
---     standalone = true,
---     on_attach = function (_, bufnr)
---         -- Hover actions
---       vim.keymap.set("n", "<leader>ha", rt.hover_actions.hover_actions, { buffer = bufnr })
---       -- Code action groups
---       vim.keymap.set("n", "<leader>a", rt.code_action_group.code_action_group, { buffer = bufnr })
---       -- configure inlay hoints
---       vim.keymap.set('n', '<leader>he', rt.inlay_hints.enable)
---       vim.keymap.set('n', '<leader>hd', rt.inlay_hints.disable)
---       on_attach(_, bufnr)
---     end
---   },
--- })
+-- The line beneath this is called `modeline`. See `:help modeline`
+-- vim: ts=2 sts=2 sw=2 et
