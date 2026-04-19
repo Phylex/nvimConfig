@@ -1,812 +1,499 @@
--- This file defines the highlights for different languages and environments
--- It uses the colors from the colors file (this is the one that defines the
--- colors used in the colorscheme and this file says how the colors are
--- applied in the various situations
-
-local c = require('nabla.colors')
-local cfg = vim.g.nabla_config
-local util = require("nabla.util")
+-- Highlight groups for the nabla colorscheme.
+-- Uses vim.api.nvim_set_hl directly. Covers editor UI, diagnostics,
+-- treesitter @-captures, LSP semantic tokens (@lsp.type.*),
+-- legacy Vim syntax groups (fallback), and groups for currently-installed plugins.
 
 local M = {}
---- Dictionary containing the highlighting rules for the different
---- Languages
-local hl = {langs = {}, plugins = {}}
 
-local function vim_highlights(highlights)
-    for group_name, group_settings in pairs(highlights) do
-        vim.api.nvim_command(string.format("highlight %s guifg=%s guibg=%s guisp=%s gui=%s", group_name,
-            group_settings.fg or "none",
-            group_settings.bg or "none",
-            group_settings.sp or "none",
-            group_settings.fmt or "none"))
+---Translate an `fmt = "bold,italic,..."` string into the boolean keys
+---that vim.api.nvim_set_hl expects.
+---@param spec table
+---@return table
+local function normalize(spec)
+    local out = {}
+    for k, v in pairs(spec) do
+        if k == "fmt" then
+            if type(v) == "string" then
+                for token in string.gmatch(v, "[^,]+") do
+                    local key = token:match("^%s*(.-)%s*$")
+                    if key == "bold" then out.bold = true
+                    elseif key == "italic" then out.italic = true
+                    elseif key == "underline" then out.underline = true
+                    elseif key == "undercurl" then out.undercurl = true
+                    elseif key == "strikethrough" then out.strikethrough = true
+                    elseif key == "reverse" then out.reverse = true
+                    elseif key == "standout" then out.standout = true
+                    elseif key == "nocombine" then out.nocombine = true
+                    -- "none" is ignored (means "no format")
+                    end
+                end
+            end
+        elseif k == "fg" or k == "bg" or k == "sp" then
+            if v ~= nil and v ~= "none" then out[k] = v end
+        else
+            out[k] = v
+        end
     end
+    return out
 end
 
-
-hl.common = {
-    Normal =                    {fg = c.fg, bg = cfg.transparent and c.none or c.bg0},
-    Terminal =                  {fg = c.fg, bg = cfg.transparent and c.none or c.bg0},
-    EndOfBuffer =               {fg = cfg.ending_tildes and c.bg2 or c.bg0, bg = cfg.transparent and c.none or c.bg0},
-    FoldColumn =                {fg = c.fg, bg = cfg.transparent and c.none or c.bg1},
-    Folded =                    {fg = c.fg, bg = cfg.transparent and c.none or c.bg1},
-    SignColumn =                {fg = c.fg, bg = cfg.transparent and c.none or c.bg0},
-    ToolbarLine =               {fg = c.fg},
-    Cursor =                    {fmt = "reverse"},
-    vCursor =                   {fmt = "reverse"},
-    iCursor =                   {fmt = "reverse"},
-    lCursor =                   {fmt = "reverse"},
-    CursorIM =                  {fmt = "reverse"},
-    CursorColumn =              {bg = c.bg1},
-    CursorLine =                {bg = c.bg1},
-    ColorColumn =               {bg = c.bg1},
-    Comment =                   {fg = c.fg_2},
-    CursorLineNr =              {fg = c.fg},
-    LineNr =                    {fg = c.fg_4},
-    Conceal =                   {fg = c.fg, bg = c.bg1},
-    DiffAdd =                   {fg = c.none, bg = c.diff_add},
-    DiffChange =                {fg = c.none, bg = c.diff_change},
-    DiffDelete =                {fg = c.none, bg = c.diff_delete},
-    DiffText =                  {fg = c.none, bg= c.diff_text},
-    DiffAdded =                 {fg = c.blue_green_6},
-    DiffRemoved =               {fg = c.purple_6},
-    DiffFile =                  {fg = c.blue_06},
-    DiffIndexLine =             {fg = c.grey},
-    Directory =                 {fg = c.blue_01},
-    ErrorMsg =                  {fg = c.purple_8, fmt = "bold"},
-    WarningMsg =                {fg = c.yellow_6, fmt = "bold"},
-    MoreMsg =                   {fg = c.seaside_1, fmt = "bold"},
-    IncSearch =                 {fg = c.bg0, bg = c.orange},
-    Search =                    {fg = c.blue_1, bg = c.bg_yellow},
-    Substitute =                {fg = c.bg0, bg = c.green},
-    MatchParen =                {fg = c.purple_7, bg = c.grey},
-    NonText =                   {fg = c.grey},
-    Whitespace =                {fg = c.grey},
-    SpecialKey =                {fg = c.grey},
-    Pmenu =                     {fg = c.fg, bg = c.bg1},
-    PmenuSbar =                 {fg = c.none, bg = c.bg1},
-    PmenuSel =                  {fg = c.bg0, bg = c.bg_blue},
-    WildMenu =                  {fg = c.bg0, bg = c.blue},
-    PmenuThumb =                {fg = c.none, bg = c.grey},
-    Question =                  {fg = c.yellow_1},
-    SpellBad =                  {fg = c.purple_6, fmt = "underline", sp = c.red},
-    SpellCap =                  {fg = c.yellow_1, fmt = "underline", sp = c.yellow},
-    SpellLocal =                {fg = c.blue_09, fmt = "underline", sp = c.blue},
-    SpellRare =                 {fg = c.purple_9, fmt = "underline", sp = c.purple},
-    StatusLine =                {fg = c.fg, bg = c.bg2},
-    StatusLineTerm =            {fg = c.fg, bg = c.bg2},
-    StatusLineNC =              {fg = c.grey, bg = c.bg1},
-    StatusLineTermNC =          {fg = c.grey, bg = c.bg1},
-    TabLine =                   {fg = c.fg, bg = c.bg1},
-    TabLineFill =               {fg = c.grey, bg = c.bg1},
-    TabLineSel =                {fg = c.bg0, bg = c.fg},
-    VertSplit =                 {fg = c.fg},
-    Visual =                    {bg = c.bg3},
-    VisualNOS =                 {fg = c.none, bg = c.bg2, fmt = "underline"},
-    QuickFixLine =              {fg = c.blue_09, fmt = "underline"},
-    Debug =                     {fg = c.yellow_1},
-    debugPC =                   {fg = c.bg0, bg = c.teal},
-    debugBreakpoint =           {fg = c.bg0, bg = c.red},
-    ToolbarButton =             {fg = c.bg0, bg = c.bg_blue},
-    FloatBorder =               {fg = c.fg, bg = c.bg1},
-    NormalFloat =               {fg = c.fg, bg = c.bg1},
-}
-
-hl.syntax = {
-    String =                            {fg = c.fg_5, fmt = cfg.code_style.strings},
-    Character =                         {fg = c.blue_04},
-    Number =                            {fg = c.yellow_6},
-    Float =                             {fg = c.yellow_5},
-    Boolean =                           {fg = c.yellow_4},
-    Type =                              {fg = c.blue_16},
-    Structure =                         {fg = c.green_01},
-    StorageClass =                      {fg = c.fg},
-    Identifier =                        {fg = c.fg, fmt = cfg.code_style.variables},
-    Constant =                          {fg = c.fg},
-    PreProc =                           {fg = c.fg},
-    PreCondit =                         {fg = c.fg},
-    Include =                           {fg = c.green_02},
-    Keyword =                           {fg = c.fg, fmt = cfg.code_style.keywords},
-    Define =                            {fg = c.fg},
-    Typedef =                           {fg = c.fg},
-    Exception =                         {fg = c.fg},
-    Conditional =                       {fg = c.fg, fmt = cfg.code_style.keywords},
-    Repeat =                            {fg = c.fg, fmt = cfg.code_style.keywords},
-    Statement =                         {fg = c.fg},
-    Macro =                             {fg = c.fg},
-    Error =                             {fg = c.fg},
-    Label =                             {fg = c.fg},
-    Special =                           {fg = c.fg},
-    SpecialChar =                       {fg = c.fg},
-    Function =                          {fg = c.blue_08, fmt = cfg.code_style.functions},
-    Operator =                          {fg = c.fg},
-    Title =                             {fg = c.fg},
-    Tag =                               {fg = c.fg},
-    Delimiter =                         {fg = c.fg},
-    Comment =                           {fg = c.fg_2, fmt = cfg.code_style.comments},
-    SpecialComment =                    {fg = c.fg, fmt = cfg.code_style.comments},
-    Todo =                              {fg = c.fg, fmt = cfg.code_style.comments}
-}
-
--- This is the section where the treesitter and the lsp tokens
--- are highlighted. This is guarded by the relevant api checks
-if vim.api.nvim_call_function("has", { "nvim-0.8" }) == 1 then
-    hl.treesitter = {
-        -- highlights for specific data types 
-        ["@variable"] =                 {fg = c.blue_18},
-        ["@variable.builtin"] =         {fg = c.tropical_beach_1},
-        ["@label"] =                    {fg = c.fg},
-        ["@macro"] =                    {fg = c.fg},
-        ["@annotation"] =               {fg = c.fg},
-        ["@constant"] =                 {fg = c.yellow_3},
-        ["@constant.builtin"] =         {fg = c.yellow_2},
-        ["@constant.macro"] =           {fg = c.yellow_1},
-        ["@comment"] =                  hl.syntax.Comment,
-        ["@constructor"] =              {fg = c.green_10, fmt = "bold"},
-        ["@error"] =                    {fg = c.fg},
-        ["@exception"] =                {fg = c.purple_6},
-        ["@storageclass"] =             {fg = c.purple_12},
-        ["@type.builtin"] =             {fg = c.green_11},
-        ["@operator"] =                 {fg = c.seaside_4},
-        ["@property"] =                 {fg = c.green01},
-        
-        -- builtin type highlights
-        ["@type"] =                     hl.syntax.Type,
-        ["@string"] =                   hl.syntax.String,
-        ["@field"] =                    {fg = c.green_04},
-        ["@string.regex"] =             {fg = c.fg, fmt = cfg.code_style.strings},
-        ["@string.escape"] =            {fg = c.fg, fmt = cfg.code_style.strings},
-        ["@attribute"] =                {fg = c.blue_13},
-        ["@boolean"] =                  hl.syntax.Boolean,
-        ["@number"] =                   hl.syntax.Number,
-        ["@float"] =                    hl.syntax.Float,
-        ["@character"] =                hl.syntax.Chatacter,
-        ["@none"] =                     {fg = c.fg},
-
-        -- colors for functions
-        ["@decorator"] =                {fg = c.blue_05},
-        ["@function"] =                 hl.syntax.Function,
-        ["@function.builtin"] =         {fg = c.blue_04, fmt = cfg.code_style.functions},
-        ["@function.macro"] =           {fg = c.blue_02, fmt = cfg.code_style.functions},
-        ["@method"] =                   {fg = c.blue_11},
-        ["@parameter"] =                {fg = c.blue_01},
-        ["@parameter.reference"] =      {fg = c.fg},
-
-        -- colors for keywords
-        ["@repeat"] =                   {fg = c.purple_12, fmt = cfg.code_style.keywords},
-        ["@keyword"] =                  {fg = c.purple_9, fmt = cfg.code_style.keywords},
-        ["@conditional"] =              {fg = c.purple_12,   fmt = cfg.code_style.keywords},
-        ["@keyword.function"] =         {fg = c.purple_11, fmt = cfg.code_style.functions},
-        ["@keyword.operator"] =         {fg = c.fg, fmt = cfg.code_style.keywords},
-        
-        -- colors for namespace related 
-        ["@include"] =                  hl.syntax.Include,
-        ["@namespace"] =                {fg = c.green_04},
-        ["@symbol"] =                   {fg = c.fg},
-        
-        -- tag related stuff
-        ["@tag"] =                      {fg = c.fg},
-        ["@tag.delimiter"] =            {fg = c.fg},
-        
-        -- punctuation related stuff
-        ["@punctuation.delimiter"] =    {fg = c.fg},
-        ["@punctuation.bracket"] =      {fg = c.fg},
-        ["@punctuation.special"] =      {fg = c.seaside_3},
-
-        -- text based highlights
-        ["@text"] =                     {fg = c.fg},
-        ["@text.strong"] =              {fg = c.blue_01, fmt = 'bold'},
-        ["@text.emphasis"] =            {fg = c.blue_17, fmt = 'italic'},
-        ["@text.underline"] =           {fg = c.green_10, fmt = 'underline'},
-        ["@text.strike"] =              {fg = c.purple_8, fmt = 'strikethrough'},
-        ["@text.title"] =               {fg = c.blue_12, fmt = 'bold'},
-        ["@text.literal"] =             {fg = c.yellow_6},
-        ["@text.uri"] =                 {fg = c.blue_04, fmt = 'underline'},
-        ["@text.todo"] =                {fg = c.yellow_1, fmt = cfg.code_style.comments},
-        ["@text.math"] =                {fg = c.purple_9},
-        ["@text.reference"] =           {fg = c.fg},
-        ["@text.enviroment"] =          {fg = c.fg},
-        ["@text.enviroment.name"] =     {fg = c.fg},
-        ["@note"] =                     {fg = c.blue_12},
-        ["@warning"] =                  {fg = c.yellow_6},
-        ["@danger"] =                   {fg = c.purple_08},
-    }
-    if vim.api.nvim_call_function("has", { "nvim-0.9" }) == 1 then
-        hl.lsp = {
-            ["@lsp.type.generic"] =                             hl.treesitter["@text"],
-            ["@lsp.typemod.generic"] =                          hl.treesitter["@text"],
-            ["@lsp.typemod.generic.attribute"] =                {fg = c.blue_13},
-            ["@lsp.typemod.attributeBracket"] =                 {fg = c.seaside_3},
-            
-            ["@lsp.type.type"] =                                hl.treesitter["@type"],
-            ["@lsp.type.typeParameter"] =                       hl.treesitter["@type"],
-
-            ["@lsp.type.enum"] =                                hl.treesitter["@type"],
-            ["@lsp.typemod.enum"] =                             hl.treesitter["@type"],
-
-            ["@lsp.type.enumMember"] =                          {fg = c.blue_14},
-            ["@lsp.typemod.enumMember"] =                       {fg = c.blue_14},
-
-            ["@lsp.type.struct"] =                              hl.syntax.Structure,
-            ["@lsp.typemod.struct"] =                           hl.syntax.Structure,
-
-            ["@lsp.type.property"] =                            hl.treesitter["@field"],
-            ["@lsp.typemod.property"] =                         hl.treesitter["@field"],
-            ["@lsp.typemod.property.declaration"] =             {fg = c.green_07},
-
-            -- Function highlights
-            ["@lsp.type.function"] =                            hl.treesitter["@function"],
-            ["@lsp.typemod.function.defaultLibrary"] =          hl.treesitter["@function"],
-
-            ["@lsp.type.method"] =                              hl.treesitter["@method"],
-            ["@lsp.typemod.method"] =                           hl.treesitter["@method"],
-            ["@lsp.typemod.method.defaultLibrary"] =            hl.treesitter["@function"],
-            
-            ["@lsp.type.decorator"] =                           hl.treesitter["@decorator"],
-            ["@lsp.typemod.decorator"] =                        hl.treesitter["@decorator"],
-            
-            ["@lsp.type.interface"] =                           {fg = c.blue_02},
-            ["@lsp.typemod.interface"] =                        {fg = c.blue_02},
-            
-            ["@lsp.type.macro"] =                               hl.treesitter["@function.macro"],
-            ["@lsp.typemod.macro"] =                            hl.treesitter["@function.macro"],
-
-            ["@lsp.type.parameter"] =                           hl.treesitter["@parameter"],
-            ["@lsp.typemod.parameter"] =                        hl.treesitter["@parameter"],
-
-            ["@lsp.type.namespace"] =                           hl.treesitter["@namespace"],
-            ["@lsp.typemod.namespace"] =                        hl.treesitter["@namespace"],
-            ["@lsp.typemod.namespace.defaultLibrary"] =         {fg = c.green_03},
-            
-            ["@lsp.type.class"] =                               {fg = c.green_07},
-            ["@lsp.type.comment"] =                             hl.treesitter["@comment"],
-            ["@lsp.type.keyword"] =                             hl.treesitter["@keyword"],
-            ["@lsp.type.selfKeyword"] =                         hl.treesitter["@variable.builtin"],
-            ["@lsp.typemod.selfKeyword"] =                      hl.treesitter["@variable.builtin"],
-            ["@lsp.type.number"] =                              hl.treesitter["@number"],
-            ["@lsp.type.property"] =                            hl.treesitter["@property"],
-            ["@lsp.type.variable"] =                            hl.treesitter["@variable"],
-            ["@lsp.typemod.derive"] =                           {fg = c.blue_02},
-            
-            ["@lsp.typemod.operator.injected"] =                hl.treesitter["@operator"],
-            ["@lsp.typemod.string.injected"] =                  hl.treesitter["@string"],
-            ["@lsp.typemod.variable.defaultLibrary"] =          hl.treesitter["@variable.builtin"],
-            ["@lsp.typemod.variable.injected"] =                hl.treesitter["@variable"],
-            ["@lsp.type.builtinType"] =                         hl.treesitter["@type.builtin"],
-        }
+---Apply a table of {group_name = spec} mappings.
+---@param groups table
+local function apply(groups)
+    for name, spec in pairs(groups) do
+        vim.api.nvim_set_hl(0, name, normalize(spec))
     end
-else
-    hl.treesitter = {
-        TSAnnotation =              {fg = c.fg},
-        TSAttribute =               {fg = c.fg},
-        TSBoolean =                 {fg = c.fg},
-        TSCharacter =               {fg = c.fg},
-        TSComment =                 {fg = c.fg, fmt = cfg.code_style.comments},
-        TSConditional =             {fg = c.fg, fmt = cfg.code_style.keywords},
-        TSConstant =                {fg = c.fg},
-        TSConstBuiltin =            {fg = c.fg},
-        TSConstMacro =              {fg = c.fg},
-        TSConstructor =             {fg = c.fg, fmt = "bold"},
-        TSError =                   {fg = c.fg},
-        TSException =               {fg = c.fg},
-        TSField =                   {fg = c.fg},
-        TSFloat =                   {fg = c.fg},
-        TSFunction =                {fg = c.fg, fmt = cfg.code_style.functions},
-        TSFuncBuiltin =             {fg = c.fg, fmt = cfg.code_style.functions},
-        TSFuncMacro =               {fg = c.fg, fmt = cfg.code_style.functions},
-        TSInclude =                 {fg = c.fg},
-        TSKeyword =                 {fg = c.fg, fmt = cfg.code_style.keywords},
-        TSKeywordFunction =         {fg = c.fg, fmt = cfg.code_style.functions},
-        TSKeywordOperator =         {fg = c.fg, fmt = cfg.code_style.keywords},
-        TSLabel =                   {fg = c.fg},
-        TSMethod =                  {fg = c.fg},
-        TSNamespace =               {fg = c.fg},
-        TSNone =                    {fg = c.fg},
-        TSNumber =                  {fg = c.fg},
-        TSOperator =                {fg = c.fg},
-        TSParameter =               {fg = c.fg},
-        TSParameterReference =      {fg = c.fg},
-        TSProperty =                {fg = c.green_01},
-        TSPunctDelimiter =          {fg = c.fg},
-        TSPunctBracket =            {fg = c.fg},
-        TSPunctSpecial =            {fg = c.fg},
-        TSRepeat =                  {fg = c.fg, fmt = cfg.code_style.keywords},
-        TSString =                  {fg = c.fg, fmt = cfg.code_style.strings},
-        TSStringRegex =             {fg = c.fg, fmt = cfg.code_style.strings},
-        TSStringEscape =            {fg = c.fg, fmt = cfg.code_style.strings},
-        TSSymbol =                  {fg = c.fg},
-        TSTag =                     {fg = c.fg},
-        TSTagDelimiter =            {fg = c.fg},
-        TSText =                    {fg = c.fg},
-        TSStrong =                  {fg = c.fg, fmt = 'bold'},
-        TSEmphasis =                {fg = c.fg, fmt = 'italic'},
-        TSUnderline =               {fg = c.fg, fmt = 'underline'},
-        TSStrike =                  {fg = c.fg, fmt = 'strikethrough'},
-        TSTitle =                   {fg = c.fg, fmt = 'bold'},
-        TSLiteral =                 {fg = c.fg},
-        TSURI =                     {fg = c.fg, fmt = 'underline'},
-        TSMath =                    {fg = c.fg},
-        TSTextReference =           {fg = c.fg},
-        TSEnviroment =              {fg = c.fg},
-        TSEnviromentName =          {fg = c.fg},
-        TSNote =                    {fg = c.fg},
-        TSWarning =                 {fg = c.fg},
-        TSDanger =                  {fg = c.fg},
-        TSType =                    {fg = c.fg},
-        TSTypeBuiltin =             {fg = c.fg},
-        TSVariable =                {fg = c.fg, fmt = cfg.code_style.variables},
-        TSVariableBuiltin =         {fg = c.fg, fmt = cfg.code_style.variables},
-    }
 end
-
-
-
-local diagnostics_error_color = cfg.diagnostics.darker and c.fg or c.fg
-local diagnostics_hint_color =  cfg.diagnostics.darker and c.fg or c.fg
-local diagnostics_warn_color =  cfg.diagnostics.darker and c.fg or c.fg
-local diagnostics_info_color =  cfg.diagnostics.darker and c.fg or c.fg
-hl.plugins.lsp = {
-    LspCxxHlGroupEnumConstant =     {fg = c.fg},
-    LspCxxHlGroupMemberVariable =   {fg = c.fg},
-    LspCxxHlGroupNamespace =        {fg = c.fg},
-    LspCxxHlSkippedRegion =         {fg = c.fg},
-    LspCxxHlSkippedRegionBeginEnd = {fg = c.fg},
-    DiagnosticError =               {fg = c.purple_4},
-    DiagnosticHint =                {fg = c.bg_4},
-    DiagnosticInfo =                {fg = c.fg},
-    DiagnosticWarn =                {fg = c.fg},
-    DiagnosticVirtualTextError =    { bg = cfg.diagnostics.background and util.darken(diagnostics_error_color, 0.1, c.bg0) or c.none, fg = diagnostics_error_color },
-    DiagnosticVirtualTextWarn =     { bg = cfg.diagnostics.background and util.darken(diagnostics_warn_color, 0.1, c.bg0) or c.none, fg = diagnostics_warn_color },
-    DiagnosticVirtualTextInfo =     { bg = cfg.diagnostics.background and util.darken(diagnostics_info_color, 0.1, c.bg0) or c.none, fg = diagnostics_info_color },
-    DiagnosticVirtualTextHint =     { bg = cfg.diagnostics.background and util.darken(diagnostics_hint_color, 0.1, c.bg0) or c.none, fg = diagnostics_hint_color },
-    DiagnosticUnderlineError =      {fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.fg},
-    DiagnosticUnderlineHint =       {fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.fg},
-    DiagnosticUnderlineInfo =       {fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.fg},
-    DiagnosticUnderlineWarn =       {fmt = cfg.diagnostics.undercurl and "undercurl" or "underline", sp = c.fg},
-    LspReferenceText =              { bg = c.bg2 },
-    LspReferenceWrite =             { bg = c.bg2 },
-    LspReferenceRead =              { bg = c.bg2 },
-    LspCodeLens =                   { fg = c.fg, fmt = cfg.code_style.comments },
-    LspCodeLensSeparator =          { fg = c.fg },
-}
-
-hl.plugins.lsp.LspDiagnosticsDefaultError = hl.plugins.lsp.DiagnosticError
-hl.plugins.lsp.LspDiagnosticsDefaultHint = hl.plugins.lsp.DiagnosticHint
-hl.plugins.lsp.LspDiagnosticsDefaultInformation = hl.plugins.lsp.DiagnosticInfo
-hl.plugins.lsp.LspDiagnosticsDefaultWarning = hl.plugins.lsp.DiagnosticWarn
-hl.plugins.lsp.LspDiagnosticsUnderlineError = hl.plugins.lsp.DiagnosticUnderlineError
-hl.plugins.lsp.LspDiagnosticsUnderlineHint = hl.plugins.lsp.DiagnosticUnderlineHint
-hl.plugins.lsp.LspDiagnosticsUnderlineInformation = hl.plugins.lsp.DiagnosticUnderlineInfo
-hl.plugins.lsp.LspDiagnosticsUnderlineWarning = hl.plugins.lsp.DiagnosticUnderlineWarn
-hl.plugins.lsp.LspDiagnosticsVirtualTextError = hl.plugins.lsp.DiagnosticVirtualTextError
-hl.plugins.lsp.LspDiagnosticsVirtualTextWarning = hl.plugins.lsp.DiagnosticVirtualTextWarn
-hl.plugins.lsp.LspDiagnosticsVirtualTextInformation = hl.plugins.lsp.DiagnosticVirtualTextInfo
-hl.plugins.lsp.LspDiagnosticsVirtualTextHint = hl.plugins.lsp.DiagnosticVirtualTextHint
-
-hl.plugins.ale = {
-    ALEErrorSign = hl.plugins.lsp.DiagnosticError,
-    ALEInfoSign = hl.plugins.lsp.DiagnosticInfo,
-    ALEWarningSign = hl.plugins.lsp.DiagnosticWarn,
-}
-
-hl.plugins.barbar = {
-    BufferCurrent =                 { fmt = "bold" },
-    BufferCurrentMod =              { fg = c.fg, fmt = "bold,italic" },
-    BufferCurrentSign =             { fg = c.fg },
-    BufferInactiveMod =             { fg = c.fg, bg = c.bg1, fmt = "italic" },
-    BufferVisible =                 { fg = c.fg, bg = c.bg0 },
-    BufferVisibleMod =              { fg = c.fg, bg = c.bg0, fmt = "italic" },
-    BufferVisibleIndex =            { fg = c.fg, bg = c.bg0 },
-    BufferVisibleSign =             { fg = c.fg, bg = c.bg0 },
-    BufferVisibleTarget =           { fg = c.fg, bg = c.bg0 },
-}
-
-hl.plugins.cmp = {
-    CmpItemAbbr =                   {fg = c.fg},
-    CmpItemAbbrDeprecated =         {fg = c.fg, fmt = "strikethrough" },
-    CmpItemAbbrMatch =              {fg = c.fg},
-    CmpItemAbbrMatchFuzzy =         {fg = c.fg, fmt = "underline" },
-    CmpItemMenu =                   {fg = c.fg},
-    CmpItemKind =                   {fg = c.fg, fmt = cfg.cmp_itemkind_reverse and "reverse" },
-}
-
-hl.plugins.coc = {
-    CocErrorSign =                  hl.plugins.lsp.DiagnosticError,
-    CocHintSign =                   hl.plugins.lsp.DiagnosticHint,
-    CocInfoSign =                   hl.plugins.lsp.DiagnosticInfo,
-    CocWarningSign =                hl.plugins.lsp.DiagnosticWarn,
-}
-
-hl.plugins.whichkey = {
-    WhichKey =                      {fg = c.fg},
-    WhichKeyDesc =                  {fg = c.fg},
-    WhichKeyGroup =                 {fg = c.fg},
-    WhichKeySeperator =             {fg = c.fg},
-}
-
-hl.plugins.gitgutter = {
-    GitGutterAdd =                  {fg = c.fg},
-    GitGutterChange =               {fg = c.fg},
-    GitGutterDelete =               {fg = c.fg},
-}
-
-hl.plugins.hop = {
-    HopNextKey =                    {fg = c.fg, fmt = "bold"},
-    HopNextKey1 =                   {fg = c.fg, fmt = "bold"},
-    HopNextKey2 =                   {fg = util.darken(c.fg, 0.7)},
-    HopUnmatched =                  {fg = c.fg},
-}
-
--- comment
-hl.plugins.diffview = {
-    DiffviewFilePanelTitle =        {fg = c.fg, fmt = "bold"},
-    DiffviewFilePanelCounter =      {fg = c.fg, fmt = "bold"},
-    DiffviewFilePanelFileName =     {fg = c.fg},
-    DiffviewNormal =                hl.common.Normal,
-    DiffviewCursorLine =            hl.common.CursorLine,
-    DiffviewVertSplit =             hl.common.VertSplit,
-    DiffviewSignColumn =            hl.common.SignColumn,
-    DiffviewStatusLine =            hl.common.StatusLine,
-    DiffviewStatusLineNC =          hl.common.StatusLineNC,
-    DiffviewEndOfBuffer =           hl.common.EndOfBuffer,
-    DiffviewFilePanelRootPath =     {fg = c.fg},
-    DiffviewFilePanelPath =         {fg = c.fg},
-    DiffviewFilePanelInsertions =   {fg = c.fg},
-    DiffviewFilePanelDeletions =    {fg = c.fg},
-    DiffviewStatusAdded =           {fg = c.fg},
-    DiffviewStatusUntracked =       {fg = c.fg},
-    DiffviewStatusModified =        {fg = c.fg},
-    DiffviewStatusRenamed =         {fg = c.fg},
-    DiffviewStatusCopied =          {fg = c.fg},
-    DiffviewStatusTypeChange =      {fg = c.fg},
-    DiffviewStatusUnmerged =        {fg = c.fg},
-    DiffviewStatusUnknown =         {fg = c.fg},
-    DiffviewStatusDeleted =         {fg = c.fg},
-    DiffviewStatusBroken =          {fg = c.fg},
-}
-
-hl.plugins.gitsigns = {
-    GitSignsAdd =                   {fg = c.fg},
-    GitSignsAddLn =                 {fg = c.fg},
-    GitSignsAddNr =                 {fg = c.fg},
-    GitSignsChange =                {fg = c.fg},
-    GitSignsChangeLn =              {fg = c.fg},
-    GitSignsChangeNr =              {fg = c.fg},
-    GitSignsDelete =                {fg = c.fg},
-    GitSignsDeleteLn =              {fg = c.fg},
-    GitSignsDeleteNr =              {fg = c.fg},
-}
-
-hl.plugins.neo_tree = {
-    NeoTreeNormal =                 {fg = c.fg, bg = cfg.transparent and c.none or c.bg_d },
-    NeoTreeNormalNC =               {fg = c.fg, bg = cfg.transparent and c.none or c.bg_d },
-    NeoTreeVertSplit =              {fg = c.bg1, bg = cfg.transparent and c.none or c.bg1 },
-    NeoTreeWinSeparator =           {fg = c.bg1, bg = cfg.transparent and c.none or c.bg1 },
-    NeoTreeEndOfBuffer =            {fg = cfg.ending_tildes and c.bg2 or c.bg_d, bg = cfg.transparent and c.none or c.bg_d },
-    NeoTreeRootName =               {fg = c.fg, fmt = "bold" },
-    NeoTreeGitAdded =               {fg = c.fg},
-    NeoTreeGitDeleted =             {fg = c.fg},
-    NeoTreeGitModified =            {fg = c.fg},
-    NeoTreeGitConflict =            {fg = c.fg, fmt = "bold,italic" },
-    NeoTreeGitUntracked =           {fg = c.fg, fmt = "italic" },
-    NeoTreeIndentMarker =           {fg = c.fg},
-    NeoTreeSymbolicLinkTarget =     {fg = c.fg},
-}
-
-hl.plugins.neotest = {
-    NeotestAdapterName =        { fg = c.fg, fmt = "bold" },
-    NeotestDir =                {fg = c.fg},
-    NeotestExpandMarker =       {fg = c.fg},
-    NeotestFailed =             {fg = c.fg},
-    NeotestFile =               {fg = c.fg},
-    NeotestFocused =            {fmt = "bold,italic" },
-    NeotestIndent =             {fg = c.fg},
-    NeotestMarked =             {fg = c.orange, fmt = "bold" },
-    NeotestNamespace =          {fg = c.fg},
-    NeotestPassed =             {fg = c.fg},
-    NeotestRunning =            {fg = c.fg},
-    NeotestWinSelect =          {fg = c.fg, fmt = "bold" },
-    NeotestSkipped =            {fg = c.fg},
-    NeotestTarget =             {fg = c.fg},
-    NeotestTest =               {fg = c.fg},
-    NeotestUnknown =            {fg = c.fg},
-}
-
-hl.plugins.nvim_tree = {
-    NvimTreeNormal =            {fg = c.fg, bg = cfg.transparent and c.none or c.bg_d },
-    NvimTreeVertSplit =         {fg = c.bg_d, bg = cfg.transparent and c.none or c.bg_d },
-    NvimTreeEndOfBuffer =       {fg = cfg.ending_tildes and c.bg2 or c.bg_d, bg = cfg.transparent and c.none or c.bg_d },
-    NvimTreeRootFolder =        {fg = c.fg, fmt = "bold" },
-    NvimTreeGitDirty =          {fg = c.fg},
-    NvimTreeGitNew =            {fg = c.fg},
-    NvimTreeGitDeleted =        {fg = c.fg},
-    NvimTreeSpecialFile =       {fg = c.fg, fmt = "underline" },
-    NvimTreeIndentMarker =      {fg = c.fg},
-    NvimTreeImageFile =         {fg = c.fg },
-    NvimTreeSymlink =           {fg = c.fg},
-    NvimTreeFolderName =        {fg = c.fg},
-}
-hl.plugins.telescope = {
-    TelescopeBorder =           {fg = c.blue_02},
-    TelescopePromptBorder =     {fg = c.blue_13},
-    TelescopeResultsBorder =    {fg = c.blue_10},
-    TelescopePreviewBorder =    {fg = c.green_10},
-    TelescopeMatching =         {fg = c.purple_7, fmt = "bold" },
-    TelescopePromptPrefix =     {fg = c.fg},
-    TelescopeSelection =        {bg = c.bg2},
-    TelescopeSelectionCaret =   {fg = c.purple_8},
-}
-
-hl.plugins.dashboard = {
-    DashboardShortCut =         {fg = c.fg},
-    DashboardHeader =           {fg = c.fg},
-    DashboardCenter =           {fg = c.fg},
-    DashboardFooter =           {fg = c.fg, fmt = "italic"}
-}
-
-hl.plugins.outline = {
-    FocusedSymbol =             {fg = c.fg, bg = c.bg2, fmt = "bold" },
-    AerialLine =                {fg = c.fg, bg = c.bg2, fmt = "bold" },
-}
-
-hl.plugins.navic = {
-    NavicText =                 {fg = c.fg},
-    NavicSeparator =            {fg = c.fg},
-}
-
-hl.plugins.ts_rainbow = {
-    rainbowcol1 =               {fg = c.fg},
-    rainbowcol2 =               {fg = c.fg},
-    rainbowcol3 =               {fg = c.fg},
-    rainbowcol4 =               {fg = c.fg},
-    rainbowcol5 =               {fg = c.fg},
-    rainbowcol6 =               {fg = c.fg},
-    rainbowcol7 =               {fg = c.fg},
-}
-
-hl.plugins.indent_blankline = {
-    IndentBlankLineIndent1 =    {fg = c.fg},
-    IndentBlankLineIndent2 =    {fg = c.fg},
-    IndentBlankLineIndent3 =    {fg = c.fg},
-    IndentBlankLineIndent4 =    {fg = c.fg},
-    IndentBlankLineIndent5 =    {fg = c.fg},
-    IndentBlankLineIndent6 =    {fg = c.fg},
-    IndentBlankLineContext =    {fg = c.fg, bg = c.bg3, bold = true },
-}
-
-hl.plugins.mini = {
-    MiniCompletionActiveParameter = { fmt = "underline" },
-    MiniCursorword =            {fmt = "underline" },
-    MiniCursorwordCurrent =     {fmt = "underline" },
-    MiniIndentscopeSymbol =     {fg = c.fg },
-    MiniIndentscopePrefix =     {fmt = "nocombine" }, -- Make it invisible
-    MiniJump =                  {fg = c.fg, fmt = "underline", sp = c.purple },
-    MiniJump2dSpot =            {fg = c.fg, fmt = "bold,nocombine" },
-    MiniStarterCurrent =        {fmt = "nocombine" },
-    MiniStarterFooter =         {fg = c.fg, fmt = "italic" },
-    MiniStarterHeader =         {fg = c.fg},
-    MiniStarterInactive =       {fg = c.fg, fmt = cfg.code_style.comments },
-    MiniStarterItem =           {fg = c.fg, bg = cfg.transparent and c.none or c.bg0 },
-    MiniStarterItemBullet =     {fg = c.fg },
-    MiniStarterItemPrefix =     {fg = c.fg },
-    MiniStarterSection =        {fg = c.fg},
-    MiniStarterQuery =          {fg = c.fg },
-    MiniStatuslineDevinfo =     {fg = c.fg, bg = c.bg2 },
-    MiniStatuslineFileinfo =    {fg = c.fg, bg = c.bg2 },
-    MiniStatuslineFilename =    {fg = c.fg, bg = c.bg1 },
-    MiniStatuslineInactive =    {fg = c.fg, bg = c.bg0 },
-    MiniStatuslineModeCommand = {fg = c.bg0, bg = c.fg, fmt = "bold" },
-    MiniStatuslineModeInsert =  {fg = c.bg0, bg = c.fg, fmt = "bold" },
-    MiniStatuslineModeNormal =  {fg = c.bg0, bg = c.fg, fmt = "bold" },
-    MiniStatuslineModeOther =   {fg = c.bg0, bg = c.fg, fmt = "bold" },
-    MiniStatuslineModeReplace = {fg = c.bg0, bg = c.fg, fmt = "bold" },
-    MiniStatuslineModeVisual =  {fg = c.bg0, bg = c.fg, fmt = "bold" },
-
-    MiniSurround = { fg = c.bg0, bg = c.orange },
-
-    MiniTablineCurrent =        {fmt = "bold" },
-    MiniTablineFill =           {fg = c.fg, bg = c.bg1 },
-    MiniTablineHidden =         {fg = c.fg, bg = c.bg1 },
-    MiniTablineModifiedCurrent ={fg = c.fg, fmt = "bold,italic" },
-    MiniTablineModifiedHidden = {fg = c.fg, bg = c.bg1, fmt = "italic" },
-    MiniTablineModifiedVisible ={fg = c.fg, bg = c.bg0, fmt = "italic" },
-    MiniTablineTabpagesection = {fg = c.fg, bg = c.fg },
-    MiniTablineVisible =        {fg = c.fg, bg = c.bg0 },
-
-    MiniTestEmphasis =          {fmt = "bold" },
-    MiniTestFail =              {fg = c.fg, fmt = "bold" },
-    MiniTestPass =              {fg = c.fg, fmt = "bold" },
-
-    MiniTrailspace =            {bg = c.fg },
-}
-
-hl.langs.c = {
-    cInclude =                  {fg = c.fg},
-    cStorageClass =             {fg = c.fg},
-    cTypedef =                  {fg = c.fg},
-    cDefine =                   {fg = c.fg},
-    cTSInclude =                {fg = c.fg},
-    cTSConstant =               {fg = c.fg},
-    cTSConstMacro =             {fg = c.fg},
-    cTSOperator =               {fg = c.fg},
-}
-
-hl.langs.cpp = {
-    cppStatement =              { fg = c.purple, fmt = "bold" },
-    cppTSInclude =              {fg = c.fg},
-    cppTSConstant =             {fg = c.fg},
-    cppTSConstMacro =           {fg = c.fg},
-    cppTSOperator =             {fg = c.fg},
-}
-
-hl.langs.markdown = {
-    markdownBlockquote =        {fg = c.fg_3},
-    markdownBold =              {fg = c.fg, fmt = "bold"},
-    markdownBoldDelimiter =     {fg = c.fg},
-    markdownCode =              {fg = c.fg},
-    markdownCodeBlock =         {fg = c.fg},
-    markdownCodeDelimiter =     {fg = c.fg},
-    markdownH1 =                {fg = c.blue_08, fmt = "bold"},
-    markdownH2 =                {fg = c.blue_09, fmt = "bold"},
-    markdownH3 =                {fg = c.blue_11, fmt = "bold"},
-    markdownH4 =                {fg = c.blue_13, fmt = "bold"},
-    markdownH5 =                {fg = c.blue_14, fmt = "bold"},
-    markdownH6 =                {fg = c.blue_16, fmt = "bold"},
-    markdownHeadingDelimiter =  {fg = c.purple_11},
-    markdownHeadingRule =       {fg = c.purple_10},
-    markdownId =                {fg = c.fg},
-    markdownIdDeclaration =     {fg = c.fg},
-    markdownItalic =            {fg = c.fg, fmt = "italic"},
-    markdownItalicDelimiter =   {fg = c.fg, fmt = "italic"},
-    markdownLinkDelimiter =     {fg = c.blue_04},
-    markdownLinkText =          {fg = c.blue_02, fmt = "underline"},
-    markdownLinkTextDelimiter = {fg = c.blue_04},
-    markdownListMarker =        {fg = c.blue_14},
-    markdownOrderedListMarker = {fg = c.blue_16},
-    markdownRule =              {fg = c.green_08},
-    markdownUrl =               {fg = c.fg_4 },
-    markdownUrlDelimiter =      {fg = c.blue_07},
-    markdownUrlTitleDelimiter = {fg = c.blue_07},
-}
-
-hl.langs.php = {
-    phpFunctions =              {fg = c.fg, fmt = cfg.code_style.functions},
-    phpMethods =                {fg = c.fg},
-    phpStructure =              {fg = c.fg},
-    phpOperator =               {fg = c.fg},
-    phpMemberSelector =         {fg = c.fg},
-    phpVarSelector =            {fg = c.fg, fmt = cfg.code_style.variables},
-    phpIdentifier =             {fg = c.fg, fmt = cfg.code_style.variables},
-    phpBoolean =                {fg = c.fg},
-    phpNumber =                 {fg = c.fg},
-    phpHereDoc =                {fg = c.fg},
-    phpNowDoc =                 {fg = c.fg},
-    phpSCKeyword =              {fg = c.fg, fmt = cfg.code_style.keywords},
-    phpFCKeyword =              {fg = c.fg, fmt = cfg.code_style.keywords},
-    phpRegion =                 {fg = c.fg},
-}
-
-hl.langs.scala = {
-    scalaNameDefinition =       {fg = c.fg},
-    scalaInterpolationBoundary ={fg = c.fg},
-    scalaInterpolation =        {fg = c.fg},
-    scalaTypeOperator =         {fg = c.fg},
-    scalaOperator =             {fg = c.fg},
-    scalaKeywordModifier =      {fg = c.fg, fmt = cfg.code_style.keywords},
-}
-
-hl.langs.tex = {
-    latexTSInclude =            {fg = c.fg},
-    latexTSFuncMacro =          {fg = c.fg, fmt = cfg.code_style.functions},
-    latexTSEnvironment =        { fg = c.fg, fmt = "bold" },
-    latexTSEnvironmentName =    {fg = c.fg},
-    texCmdEnv =                 {fg = c.fg},
-    texEnvArgName =             {fg = c.fg},
-    latexTSTitle =              {fg = c.fg},
-    latexTSType =               {fg = c.fg},
-    latexTSMath   =             {fg = c.fg},
-    texMathZoneX  =             {fg = c.fg},
-    texMathZoneXX =             {fg = c.fg},
-    texMathDelimZone =          {fg = c.fg},
-    texMathDelim =              {fg = c.fg},
-    texMathOper =               {fg = c.fg},
-    texCmd =                    {fg = c.fg},
-    texCmdPart =                {fg = c.fg},
-    texCmdPackage =             {fg = c.fg},
-    texPgfType =                {fg = c.fg},
-}
-
-hl.langs.vim = {
-    vimOption =                 {fg = c.fg},
-    vimSetEqual =               {fg = c.fg},
-    vimMap =                    {fg = c.fg},
-    vimMapModKey =              {fg = c.fg},
-    vimNotation =               {fg = c.fg},
-    vimMapLhs =                 {fg = c.fg},
-    vimMapRhs =                 {fg = c.fg},
-    vimVar =                    {fg = c.fg, fmt = cfg.code_style.variables},
-    vimCommentTitle =           {fg = c.fg, fmt = cfg.code_style.comments},
-}
-
--- This field defines how the lsp colors the different
--- types of symbols that are defined by the lsp
-local lsp_kind_icons_color = {
-    Default =                   c.fg,
-    Array =                     c.fg,
-    Boolean =                   c.fg,
-    Class =                     c.fg,
-    Color =                     c.fg,
-    Constant =                  c.fg,
-    Constructor =               c.fg,
-    Enum =                      c.fg,
-    EnumMember =                c.fg,
-    Event =                     c.fg,
-    Field =                     c.fg,
-    File =                      c.fg,
-    Folder =                    c.fg,
-    Function =                  c.fg,
-    Interface =                 c.fg,
-    Key =                       c.fg,
-    Keyword =                   c.fg,
-    Method =                    c.fg,
-    Module =                    c.fg,
-    Namespace =                 c.fg,
-    Null =                      c.fg,
-    Number =                    c.fg,
-    Object =                    c.fg,
-    Operator =                  c.fg,
-    Package =                   c.fg,
-    Property =                  c.fg,
-    Reference =                 c.fg,
-    Snippet =                   c.fg,
-    String =                    c.fg,
-    Struct =                    c.fg,
-    Text =                      c.fg,
-    TypeParameter =             c.fg,
-    Unit =                      c.fg,
-    Value =                     c.fg,
-    Variable =                  c.fg,
-}
 
 function M.setup()
-    -- define cmp and aerial kind highlights with lsp_kind_icons_color
-    -- set the colors for the things that the lsp defines
-    for kind, color in pairs(lsp_kind_icons_color) do
-        hl.plugins.cmp["CmpItemKind" .. kind] = { fg = color, fmt = cfg.cmp_itemkind_reverse and "reverse" }
-        hl.plugins.outline["Aerial" .. kind .. "Icon"] = { fg = color }
-        hl.plugins.navic["NavicIcons" .. kind] = { fg = color }
-    end
+    local c = require('nabla').palette()
+    local cfg = vim.g.nabla_config
+    local util = require('nabla.util')
 
-    vim_highlights(hl.common)
-    vim_highlights(hl.syntax)
-    vim_highlights(hl.treesitter)
-    if hl.lsp then
-        vim_highlights(hl.lsp)
-    end
-    for _, group in pairs(hl.langs) do vim_highlights(group) end
-    for _, group in pairs(hl.plugins) do vim_highlights(group) end
+    local transparent_bg = cfg.transparent and c.none or c.bg.base
+    local float_bg       = cfg.transparent and c.none or c.bg.soft
+    local sign_bg        = cfg.transparent and c.none or c.bg.base
 
-    -- user defined highlights: vim_highlights function cannot be used because it sets an attribute to none if not specified
-    local function replace_color(prefix, color_name)
-        if not color_name then return "" end
-        if color_name:sub(1, 1) == '$' then
-            local name = color_name:sub(2, -1)
-            color_name = c[name]
-            if not color_name then
-                vim.schedule(function()
-                    vim.notify('nabla.nvim: unknown color "' .. name .. '"', vim.log.levels.ERROR, { title = "nabla.nvim" })
-                end)
-                return ""
-            end
-        end
-        return prefix .. "=" .. color_name
-    end
+    ------------------------------------------------------------------
+    -- Editor UI
+    ------------------------------------------------------------------
+    apply {
+        Normal              = { fg = c.fg.base, bg = transparent_bg },
+        NormalFloat         = { fg = c.fg.base, bg = float_bg },
+        FloatBorder         = { fg = c.fg.muted, bg = float_bg },
+        FloatTitle          = { fg = c.blue.light, bg = float_bg, fmt = "bold" },
+        Terminal            = { fg = c.fg.base, bg = transparent_bg },
+        EndOfBuffer         = { fg = cfg.ending_tildes and c.bg.muted or c.bg.base, bg = transparent_bg },
+        FoldColumn          = { fg = c.fg.dim, bg = transparent_bg },
+        Folded              = { fg = c.fg.muted, bg = c.bg.soft },
+        SignColumn          = { fg = c.fg.base, bg = sign_bg },
+        ToolbarLine         = { fg = c.fg.base },
+        ToolbarButton       = { fg = c.bg.base, bg = c.blue.soft, fmt = "bold" },
+        Cursor              = { fmt = "reverse" },
+        vCursor             = { fmt = "reverse" },
+        iCursor             = { fmt = "reverse" },
+        lCursor             = { fmt = "reverse" },
+        CursorIM            = { fmt = "reverse" },
+        CursorColumn        = { bg = c.bg.soft },
+        CursorLine          = { bg = c.bg.soft },
+        ColorColumn         = { bg = c.bg.soft },
+        CursorLineNr        = { fg = c.fg.base, fmt = "bold" },
+        LineNr              = { fg = c.fg.dim },
+        Conceal             = { fg = c.fg.muted, bg = c.bg.soft },
+        Directory           = { fg = c.blue.light },
+        ErrorMsg            = { fg = c.red.base, fmt = "bold" },
+        WarningMsg          = { fg = c.orange.base, fmt = "bold" },
+        MoreMsg             = { fg = c.cyan.pale, fmt = "bold" },
+        MsgArea             = { fg = c.fg.base, bg = transparent_bg },
+        Question            = { fg = c.yellow.base },
+        IncSearch           = { fg = c.bg.base, bg = c.orange.base },
+        Search              = { fg = c.bg.base, bg = c.yellow.base },
+        Substitute          = { fg = c.bg.base, bg = c.green.base },
+        MatchParen          = { fg = c.purple.hot, bg = c.bg.surface, fmt = "bold" },
+        NonText             = { fg = c.fg.dim },
+        Whitespace          = { fg = c.fg.dim },
+        SpecialKey          = { fg = c.fg.dim },
+        Pmenu               = { fg = c.fg.base, bg = c.bg.soft },
+        PmenuSbar           = { bg = c.bg.soft },
+        PmenuSel            = { fg = c.bg.base, bg = c.blue.soft },
+        PmenuThumb          = { bg = c.fg.dim },
+        WildMenu            = { fg = c.bg.base, bg = c.blue.base },
+        StatusLine          = { fg = c.fg.base, bg = c.bg.muted },
+        StatusLineTerm      = { fg = c.fg.base, bg = c.bg.muted },
+        StatusLineNC        = { fg = c.fg.dim, bg = c.bg.soft },
+        StatusLineTermNC    = { fg = c.fg.dim, bg = c.bg.soft },
+        TabLine             = { fg = c.fg.base, bg = c.bg.soft },
+        TabLineFill         = { fg = c.fg.dim, bg = c.bg.soft },
+        TabLineSel          = { fg = c.bg.base, bg = c.fg.base },
+        WinSeparator        = { fg = c.bg.surface },
+        VertSplit           = { fg = c.bg.surface },
+        Visual              = { bg = c.bg.surface },
+        VisualNOS           = { bg = c.bg.muted, fmt = "underline" },
+        QuickFixLine        = { fg = c.blue.base, fmt = "underline" },
+        Debug               = { fg = c.yellow.base },
+        debugPC             = { fg = c.bg.base, bg = c.cyan.teal },
+        debugBreakpoint     = { fg = c.bg.base, bg = c.red.base },
+        Title               = { fg = c.blue.light, fmt = "bold" },
+        SpellBad            = { sp = c.red.base, fmt = "undercurl" },
+        SpellCap            = { sp = c.yellow.base, fmt = "undercurl" },
+        SpellLocal          = { sp = c.blue.base, fmt = "undercurl" },
+        SpellRare           = { sp = c.purple.pink, fmt = "undercurl" },
+    }
 
-    for group_name, group_settings in pairs(vim.g.nabla_config.highlights) do
-        vim.api.nvim_command(string.format("highlight %s %s %s %s %s", group_name,
-            replace_color("guifg", group_settings.fg),
-            replace_color("guibg", group_settings.bg),
-            replace_color("guisp", group_settings.sp),
-            replace_color("gui", group_settings.fmt)))
+    ------------------------------------------------------------------
+    -- Diff
+    ------------------------------------------------------------------
+    apply {
+        DiffAdd             = { bg = c.diff.add },
+        DiffChange          = { bg = c.diff.change },
+        DiffDelete          = { bg = c.diff.delete },
+        DiffText            = { bg = c.diff.text },
+        DiffAdded           = { fg = c.green.base },
+        DiffRemoved         = { fg = c.red.base },
+        DiffChanged         = { fg = c.blue.base },
+        DiffFile            = { fg = c.blue.darker },
+        DiffIndexLine       = { fg = c.fg.dim },
+    }
+
+    ------------------------------------------------------------------
+    -- Legacy Vim syntax groups (fallback when treesitter/LSP inactive)
+    ------------------------------------------------------------------
+    apply {
+        String         = { fg = c.yellow.sand, fmt = cfg.code_style.strings },
+        Character      = { fg = c.orange.warm },
+        Number         = { fg = c.orange.base },
+        Float          = { fg = c.orange.base },
+        Boolean        = { fg = c.orange.deep },
+        Type           = { fg = c.purple.light },
+        Structure      = { fg = c.purple.light },
+        StorageClass   = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        Identifier     = { fg = c.fg.base, fmt = cfg.code_style.variables },
+        Constant       = { fg = c.orange.base },
+        PreProc        = { fg = c.purple.pink },
+        PreCondit      = { fg = c.purple.pink },
+        Include        = { fg = c.green.light },
+        Keyword        = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        Define         = { fg = c.purple.pink },
+        Typedef        = { fg = c.purple.light },
+        Exception      = { fg = c.purple.pink, fmt = cfg.code_style.keywords },
+        Conditional    = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        Repeat         = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        Statement      = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        Macro          = { fg = c.blue.soft, fmt = cfg.code_style.functions },
+        Error          = { fg = c.red.base },
+        Label          = { fg = c.purple.pink },
+        Special        = { fg = c.cyan.pale },
+        SpecialChar    = { fg = c.cyan.base },
+        Function       = { fg = c.blue.base, fmt = cfg.code_style.functions },
+        Operator       = { fg = c.yellow.sand },
+        Tag            = { fg = c.blue.soft },
+        Delimiter      = { fg = c.fg.muted },
+        Comment        = { fg = c.fg.muted, fmt = cfg.code_style.comments },
+        SpecialComment = { fg = c.fg.muted, fmt = cfg.code_style.comments },
+        Todo           = { fg = c.yellow.base, bg = c.bg.soft, fmt = "bold," .. cfg.code_style.comments },
+        Underlined     = { fmt = "underline" },
+    }
+
+    ------------------------------------------------------------------
+    -- Treesitter @-captures
+    ------------------------------------------------------------------
+    apply {
+        -- Variables / identifiers
+        ["@variable"]                 = { fg = c.fg.base, fmt = cfg.code_style.variables },
+        ["@variable.builtin"]         = { fg = c.orange.deep, fmt = cfg.code_style.variables },
+        ["@variable.parameter"]       = { fg = c.blue.light },
+        ["@variable.member"]          = { fg = c.green.olive },
+        ["@variable.global"]          = { fg = c.red.light },
+
+        -- Constants
+        ["@constant"]                 = { fg = c.orange.base },
+        ["@constant.builtin"]         = { fg = c.orange.deep },
+        ["@constant.macro"]           = { fg = c.orange.deep },
+
+        -- Strings / characters
+        ["@string"]                   = { fg = c.yellow.sand, fmt = cfg.code_style.strings },
+        ["@string.regex"]             = { fg = c.cyan.base, fmt = cfg.code_style.strings },
+        ["@string.escape"]            = { fg = c.cyan.light, fmt = cfg.code_style.strings },
+        ["@string.special"]           = { fg = c.cyan.pale },
+        ["@character"]                = { fg = c.orange.warm },
+        ["@character.special"]        = { fg = c.cyan.base },
+
+        -- Numbers / booleans
+        ["@number"]                   = { fg = c.orange.base },
+        ["@number.float"]             = { fg = c.orange.base },
+        ["@boolean"]                  = { fg = c.orange.deep },
+
+        -- Functions / constructors
+        ["@function"]                 = { fg = c.blue.base, fmt = cfg.code_style.functions },
+        ["@function.builtin"]         = { fg = c.blue.soft, fmt = cfg.code_style.functions },
+        ["@function.call"]            = { fg = c.blue.base, fmt = cfg.code_style.functions },
+        ["@function.method"]          = { fg = c.blue.light, fmt = cfg.code_style.functions },
+        ["@function.method.call"]     = { fg = c.blue.light, fmt = cfg.code_style.functions },
+        ["@function.macro"]           = { fg = c.blue.darker, fmt = cfg.code_style.functions },
+        ["@constructor"]              = { fg = c.green.base, fmt = "bold" },
+
+        -- Keywords
+        ["@keyword"]                  = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@keyword.function"]         = { fg = c.purple.neon, fmt = cfg.code_style.keywords },
+        ["@keyword.operator"]         = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@keyword.return"]           = { fg = c.purple.pink, fmt = cfg.code_style.keywords },
+        ["@keyword.conditional"]      = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@keyword.repeat"]           = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@keyword.import"]           = { fg = c.green.light, fmt = cfg.code_style.keywords },
+        ["@keyword.exception"]        = { fg = c.purple.pink, fmt = cfg.code_style.keywords },
+        ["@keyword.modifier"]         = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@keyword.coroutine"]        = { fg = c.purple.pink, fmt = cfg.code_style.keywords },
+
+        -- Types
+        ["@type"]                     = { fg = c.purple.light },
+        ["@type.builtin"]             = { fg = c.purple.soft },
+        ["@type.qualifier"]           = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@attribute"]                = { fg = c.cyan.base },
+        ["@property"]                 = { fg = c.green.olive },
+        ["@field"]                    = { fg = c.green.olive },
+
+        -- Operators / punctuation
+        ["@operator"]                 = { fg = c.yellow.sand },
+        ["@punctuation.delimiter"]    = { fg = c.fg.muted },
+        ["@punctuation.bracket"]      = { fg = c.fg.muted },
+        ["@punctuation.special"]      = { fg = c.cyan.pale },
+
+        -- Comments
+        ["@comment"]                  = { fg = c.fg.muted, fmt = cfg.code_style.comments },
+        ["@comment.error"]            = { fg = c.red.base, bg = c.bg.soft, fmt = "bold" },
+        ["@comment.warning"]          = { fg = c.orange.base, bg = c.bg.soft, fmt = "bold" },
+        ["@comment.todo"]             = { fg = c.yellow.base, bg = c.bg.soft, fmt = "bold" },
+        ["@comment.note"]             = { fg = c.cyan.base, bg = c.bg.soft, fmt = "bold" },
+
+        -- Tags (HTML/JSX/etc.)
+        ["@tag"]                      = { fg = c.blue.soft },
+        ["@tag.attribute"]            = { fg = c.green.olive },
+        ["@tag.delimiter"]            = { fg = c.fg.muted },
+
+        -- Markup (Markdown, doc strings)
+        ["@markup.heading.1"]         = { fg = c.blue.light, fmt = "bold" },
+        ["@markup.heading.2"]         = { fg = c.purple.light, fmt = "bold" },
+        ["@markup.heading.3"]         = { fg = c.green.base, fmt = "bold" },
+        ["@markup.heading.4"]         = { fg = c.yellow.base, fmt = "bold" },
+        ["@markup.heading.5"]         = { fg = c.orange.base, fmt = "bold" },
+        ["@markup.heading.6"]         = { fg = c.red.light, fmt = "bold" },
+        ["@markup.link"]              = { fg = c.blue.base, fmt = "underline" },
+        ["@markup.link.label"]        = { fg = c.blue.light },
+        ["@markup.link.url"]          = { fg = c.blue.deep, fmt = "underline" },
+        ["@markup.list"]              = { fg = c.cyan.base },
+        ["@markup.list.checked"]      = { fg = c.green.base },
+        ["@markup.list.unchecked"]    = { fg = c.fg.muted },
+        ["@markup.strong"]            = { fmt = "bold" },
+        ["@markup.italic"]            = { fmt = "italic" },
+        ["@markup.strikethrough"]     = { fmt = "strikethrough" },
+        ["@markup.underline"]         = { fmt = "underline" },
+        ["@markup.raw"]               = { fg = c.yellow.sand },
+        ["@markup.raw.block"]         = { fg = c.yellow.sand, bg = c.bg.soft },
+        ["@markup.quote"]             = { fg = c.fg.muted, fmt = "italic" },
+        ["@markup.math"]              = { fg = c.purple.pink },
+        ["@markup.environment"]       = { fg = c.purple.pink },
+
+        -- Diff captures
+        ["@diff.plus"]                = { fg = c.green.base, bg = c.diff.add },
+        ["@diff.minus"]               = { fg = c.red.base,   bg = c.diff.delete },
+        ["@diff.delta"]               = { fg = c.blue.base,  bg = c.diff.change },
+
+        -- Namespaces / modules
+        ["@module"]                   = { fg = c.green.light },
+        ["@namespace"]                = { fg = c.green.light },
+        ["@label"]                    = { fg = c.purple.pink },
+
+        -- None / error
+        ["@none"]                     = { fg = c.fg.base },
+        ["@error"]                    = { fg = c.red.base },
+    }
+
+    ------------------------------------------------------------------
+    -- LSP semantic tokens (refine treesitter where the server provides them)
+    ------------------------------------------------------------------
+    apply {
+        ["@lsp.type.namespace"]                    = { fg = c.green.light },
+        ["@lsp.type.type"]                         = { fg = c.purple.light },
+        ["@lsp.type.class"]                        = { fg = c.purple.light },
+        ["@lsp.type.enum"]                         = { fg = c.purple.soft },
+        ["@lsp.type.interface"]                    = { fg = c.purple.soft },
+        ["@lsp.type.struct"]                       = { fg = c.purple.light },
+        ["@lsp.type.typeParameter"]                = { fg = c.purple.soft },
+        ["@lsp.type.parameter"]                    = { fg = c.blue.light },
+        ["@lsp.type.variable"]                     = { fg = c.fg.base, fmt = cfg.code_style.variables },
+        ["@lsp.type.property"]                     = { fg = c.green.olive },
+        ["@lsp.type.enumMember"]                   = { fg = c.orange.base },
+        ["@lsp.type.function"]                     = { fg = c.blue.base, fmt = cfg.code_style.functions },
+        ["@lsp.type.method"]                       = { fg = c.blue.light, fmt = cfg.code_style.functions },
+        ["@lsp.type.macro"]                        = { fg = c.blue.darker, fmt = cfg.code_style.functions },
+        ["@lsp.type.keyword"]                      = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@lsp.type.modifier"]                     = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
+        ["@lsp.type.comment"]                      = { fg = c.fg.muted, fmt = cfg.code_style.comments },
+        ["@lsp.type.string"]                       = { fg = c.yellow.sand, fmt = cfg.code_style.strings },
+        ["@lsp.type.number"]                       = { fg = c.orange.base },
+        ["@lsp.type.regexp"]                       = { fg = c.cyan.base },
+        ["@lsp.type.operator"]                     = { fg = c.yellow.sand },
+        ["@lsp.type.decorator"]                    = { fg = c.blue.darker },
+        ["@lsp.type.builtinType"]                  = { fg = c.purple.soft },
+        ["@lsp.type.selfKeyword"]                  = { fg = c.orange.deep, fmt = cfg.code_style.variables },
+        ["@lsp.type.selfTypeKeyword"]              = { fg = c.purple.soft },
+
+        ["@lsp.typemod.function.defaultLibrary"]   = { fg = c.blue.soft, fmt = cfg.code_style.functions },
+        ["@lsp.typemod.method.defaultLibrary"]     = { fg = c.blue.soft, fmt = cfg.code_style.functions },
+        ["@lsp.typemod.variable.defaultLibrary"]   = { fg = c.orange.deep, fmt = cfg.code_style.variables },
+        ["@lsp.typemod.variable.readonly"]         = { fg = c.orange.base, fmt = cfg.code_style.variables },
+        ["@lsp.typemod.variable.static"]           = { fg = c.orange.base, fmt = cfg.code_style.variables },
+        ["@lsp.typemod.property.readonly"]         = { fg = c.orange.base },
+        ["@lsp.typemod.keyword.async"]             = { fg = c.purple.pink, fmt = cfg.code_style.keywords },
+        ["@lsp.typemod.operator.injected"]         = { fg = c.yellow.sand },
+        ["@lsp.typemod.string.injected"]           = { fg = c.yellow.sand },
+        ["@lsp.typemod.variable.injected"]         = { fg = c.fg.base },
+    }
+
+    ------------------------------------------------------------------
+    -- Diagnostics
+    ------------------------------------------------------------------
+    local diag_error = c.red.base
+    local diag_warn  = c.orange.base
+    local diag_info  = c.blue.light
+    local diag_hint  = c.cyan.base
+
+    local function vt_bg(fg)
+        if not cfg.diagnostics.background then return c.none end
+        return util.darken(fg, 0.12, c.bg.base)
+    end
+    local underline_fmt = cfg.diagnostics.undercurl and "undercurl" or "underline"
+
+    apply {
+        DiagnosticError                = { fg = diag_error },
+        DiagnosticWarn                 = { fg = diag_warn },
+        DiagnosticInfo                 = { fg = diag_info },
+        DiagnosticHint                 = { fg = diag_hint },
+        DiagnosticOk                   = { fg = c.green.base },
+        DiagnosticVirtualTextError     = { fg = diag_error, bg = vt_bg(diag_error) },
+        DiagnosticVirtualTextWarn      = { fg = diag_warn,  bg = vt_bg(diag_warn)  },
+        DiagnosticVirtualTextInfo      = { fg = diag_info,  bg = vt_bg(diag_info)  },
+        DiagnosticVirtualTextHint      = { fg = diag_hint,  bg = vt_bg(diag_hint)  },
+        DiagnosticUnderlineError       = { sp = diag_error, fmt = underline_fmt },
+        DiagnosticUnderlineWarn        = { sp = diag_warn,  fmt = underline_fmt },
+        DiagnosticUnderlineInfo        = { sp = diag_info,  fmt = underline_fmt },
+        DiagnosticUnderlineHint        = { sp = diag_hint,  fmt = underline_fmt },
+        DiagnosticSignError            = { fg = diag_error, bg = sign_bg },
+        DiagnosticSignWarn             = { fg = diag_warn,  bg = sign_bg },
+        DiagnosticSignInfo             = { fg = diag_info,  bg = sign_bg },
+        DiagnosticSignHint             = { fg = diag_hint,  bg = sign_bg },
+        DiagnosticFloatingError        = { fg = diag_error, bg = float_bg },
+        DiagnosticFloatingWarn         = { fg = diag_warn,  bg = float_bg },
+        DiagnosticFloatingInfo         = { fg = diag_info,  bg = float_bg },
+        DiagnosticFloatingHint         = { fg = diag_hint,  bg = float_bg },
+        DiagnosticDeprecated           = { fg = c.fg.dim, fmt = "strikethrough" },
+        DiagnosticUnnecessary          = { fg = c.fg.dim, fmt = "italic" },
+
+        LspReferenceText               = { bg = c.bg.muted },
+        LspReferenceRead               = { bg = c.bg.muted },
+        LspReferenceWrite              = { bg = c.bg.muted },
+        LspCodeLens                    = { fg = c.fg.muted, fmt = cfg.code_style.comments },
+        LspCodeLensSeparator           = { fg = c.fg.dim },
+        LspInlayHint                   = { fg = c.fg.dim, bg = c.bg.soft, fmt = "italic" },
+    }
+
+    ------------------------------------------------------------------
+    -- gitsigns
+    ------------------------------------------------------------------
+    apply {
+        GitSignsAdd                    = { fg = c.green.base },
+        GitSignsChange                 = { fg = c.blue.base },
+        GitSignsDelete                 = { fg = c.red.base },
+        GitSignsAddNr                  = { fg = c.green.base },
+        GitSignsChangeNr               = { fg = c.blue.base },
+        GitSignsDeleteNr               = { fg = c.red.base },
+        GitSignsAddLn                  = { bg = c.diff.add },
+        GitSignsChangeLn               = { bg = c.diff.change },
+        GitSignsDeleteLn               = { bg = c.diff.delete },
+        GitSignsCurrentLineBlame       = { fg = c.fg.dim, fmt = "italic" },
+    }
+
+    ------------------------------------------------------------------
+    -- telescope
+    ------------------------------------------------------------------
+    apply {
+        TelescopeBorder                = { fg = c.fg.muted, bg = float_bg },
+        TelescopeNormal                = { fg = c.fg.base,  bg = float_bg },
+        TelescopePromptBorder          = { fg = c.blue.base, bg = float_bg },
+        TelescopePromptNormal          = { fg = c.fg.base,  bg = float_bg },
+        TelescopePromptTitle           = { fg = c.bg.base,  bg = c.blue.base, fmt = "bold" },
+        TelescopeResultsTitle          = { fg = c.bg.base,  bg = c.green.base, fmt = "bold" },
+        TelescopePreviewTitle          = { fg = c.bg.base,  bg = c.purple.pink, fmt = "bold" },
+        TelescopeSelection             = { fg = c.fg.base,  bg = c.bg.surface },
+        TelescopeSelectionCaret        = { fg = c.blue.light, bg = c.bg.surface },
+        TelescopeMatching              = { fg = c.yellow.base, fmt = "bold" },
+        TelescopeMultiSelection        = { fg = c.purple.light, bg = c.bg.surface },
+    }
+
+    ------------------------------------------------------------------
+    -- nvim-cmp
+    ------------------------------------------------------------------
+    apply {
+        CmpItemAbbr                    = { fg = c.fg.base },
+        CmpItemAbbrDeprecated          = { fg = c.fg.dim, fmt = "strikethrough" },
+        CmpItemAbbrMatch               = { fg = c.blue.light, fmt = "bold" },
+        CmpItemAbbrMatchFuzzy          = { fg = c.blue.light, fmt = "bold" },
+        CmpItemMenu                    = { fg = c.fg.muted, fmt = "italic" },
+        CmpItemKindDefault             = { fg = c.fg.muted },
+        CmpItemKindText                = { fg = c.fg.base },
+        CmpItemKindMethod              = { fg = c.blue.light },
+        CmpItemKindFunction            = { fg = c.blue.base },
+        CmpItemKindConstructor         = { fg = c.green.base },
+        CmpItemKindField               = { fg = c.green.olive },
+        CmpItemKindVariable            = { fg = c.fg.base },
+        CmpItemKindClass               = { fg = c.purple.light },
+        CmpItemKindInterface           = { fg = c.purple.soft },
+        CmpItemKindModule              = { fg = c.green.light },
+        CmpItemKindProperty            = { fg = c.green.olive },
+        CmpItemKindUnit                = { fg = c.orange.base },
+        CmpItemKindValue               = { fg = c.orange.base },
+        CmpItemKindEnum                = { fg = c.purple.soft },
+        CmpItemKindKeyword             = { fg = c.purple.hot },
+        CmpItemKindSnippet             = { fg = c.yellow.base },
+        CmpItemKindColor               = { fg = c.cyan.pale },
+        CmpItemKindFile                = { fg = c.fg.base },
+        CmpItemKindReference           = { fg = c.fg.muted },
+        CmpItemKindFolder              = { fg = c.blue.soft },
+        CmpItemKindEnumMember          = { fg = c.orange.base },
+        CmpItemKindConstant            = { fg = c.orange.base },
+        CmpItemKindStruct              = { fg = c.purple.light },
+        CmpItemKindEvent               = { fg = c.red.light },
+        CmpItemKindOperator            = { fg = c.yellow.sand },
+        CmpItemKindTypeParameter       = { fg = c.purple.soft },
+    }
+
+    ------------------------------------------------------------------
+    -- lazy.nvim UI
+    ------------------------------------------------------------------
+    apply {
+        LazyNormal                     = { fg = c.fg.base,   bg = float_bg },
+        LazyButton                     = { fg = c.fg.base,   bg = c.bg.muted },
+        LazyButtonActive               = { fg = c.bg.base,   bg = c.blue.soft, fmt = "bold" },
+        LazySpecial                    = { fg = c.blue.light },
+        LazyH1                         = { fg = c.bg.base,   bg = c.blue.soft, fmt = "bold" },
+        LazyH2                         = { fg = c.blue.light, fmt = "bold" },
+        LazyProp                       = { fg = c.fg.muted },
+        LazyComment                    = { fg = c.fg.muted,  fmt = cfg.code_style.comments },
+        LazyReasonPlugin               = { fg = c.green.base },
+        LazyReasonCmd                  = { fg = c.blue.base },
+        LazyReasonEvent                = { fg = c.yellow.base },
+        LazyReasonKeys                 = { fg = c.purple.light },
+        LazyReasonFt                   = { fg = c.cyan.base },
+    }
+
+    ------------------------------------------------------------------
+    -- mason.nvim UI
+    ------------------------------------------------------------------
+    apply {
+        MasonNormal                    = { fg = c.fg.base, bg = float_bg },
+        MasonHeader                    = { fg = c.bg.base, bg = c.blue.soft,  fmt = "bold" },
+        MasonHeaderSecondary           = { fg = c.bg.base, bg = c.purple.light, fmt = "bold" },
+        MasonHighlight                 = { fg = c.blue.light },
+        MasonHighlightBlock            = { fg = c.bg.base, bg = c.blue.soft },
+        MasonHighlightBlockBold        = { fg = c.bg.base, bg = c.blue.soft, fmt = "bold" },
+        MasonMuted                     = { fg = c.fg.muted },
+        MasonMutedBlock                = { fg = c.fg.muted, bg = c.bg.muted },
+        MasonError                     = { fg = c.red.base },
+    }
+
+    ------------------------------------------------------------------
+    -- fidget.nvim
+    ------------------------------------------------------------------
+    apply {
+        FidgetTitle                    = { fg = c.blue.light, fmt = "bold" },
+        FidgetTask                     = { fg = c.fg.muted },
+    }
+
+    ------------------------------------------------------------------
+    -- User highlight overrides
+    ------------------------------------------------------------------
+    if cfg.highlights and next(cfg.highlights) then
+        apply(cfg.highlights)
     end
 end
 
