@@ -111,6 +111,10 @@ vim.filetype.add({
     wgsl = 'wgsl'
 }})
 
+vim.opt.tabstop=4
+vim.opt.shiftwidth=4
+vim.opt.expandtab=true
+
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
@@ -125,6 +129,7 @@ vim.opt.rtp:prepend(lazypath)
 -- Configure and set
 require('lazy').setup({
   {
+    'tpope/vim-sleuth',
     -- adds signs on the left hand side of the buffer that show the
     -- status of the git repository that the file is part of
     'lewis6991/gitsigns.nvim',
@@ -294,6 +299,9 @@ require('lazy').setup({
       vim.lsp.enable('clangd')
       merge_blink_capabilities('pylsp')
       vim.lsp.enable('pylsp')
+      vim.lsp.enable('ty')
+      merge_blink_capabilities('verible')
+      vim.lsp.enable('verible')
     end
   },
 
@@ -389,7 +397,7 @@ require('lazy').setup({
       -- the rust implementation via `'prefer_rust_with_warning'`
       --
       -- See :h blink-cmp-config-fuzzy for more information
-      fuzzy = { implementation = 'lua' },
+      fuzzy = { implementation = 'rust' },
 
       -- Shows a signature help window while you type arguments for a function
       signature = { enabled = true },
