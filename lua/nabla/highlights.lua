@@ -1,7 +1,8 @@
 -- Highlight groups for the nabla colorscheme.
 -- Uses vim.api.nvim_set_hl directly. Covers editor UI, diagnostics,
 -- treesitter @-captures, LSP semantic tokens (@lsp.type.*),
--- legacy Vim syntax groups (fallback), and groups for currently-installed plugins.
+-- legacy Vim syntax groups (fallback), and groups for currently-installed plugins
+-- (gitsigns, telescope, nvim-cmp, blink.cmp, lazy.nvim, mason, fidget).
 
 local M = {}
 
@@ -59,11 +60,13 @@ function M.setup()
     ------------------------------------------------------------------
     apply {
         Normal              = { fg = c.fg.base, bg = transparent_bg },
+        NormalNC            = { fg = c.fg.base, bg = cfg.transparent and c.none or c.bg.dim },
         NormalFloat         = { fg = c.fg.base, bg = float_bg },
         FloatBorder         = { fg = c.fg.muted, bg = float_bg },
-        FloatTitle          = { fg = c.blue.light, bg = float_bg, fmt = "bold" },
+        FloatTitle          = { fg = c.blue.pure, bg = float_bg, fmt = "bold" },
+        FloatFooter         = { fg = c.fg.muted, bg = float_bg, fmt = "italic" },
         Terminal            = { fg = c.fg.base, bg = transparent_bg },
-        EndOfBuffer         = { fg = cfg.ending_tildes and c.bg.muted or c.bg.base, bg = transparent_bg },
+        EndOfBuffer         = { fg = cfg.ending_tildes and c.fg.faint or c.bg.base, bg = transparent_bg },
         FoldColumn          = { fg = c.fg.dim, bg = transparent_bg },
         Folded              = { fg = c.fg.muted, bg = c.bg.soft },
         SignColumn          = { fg = c.fg.base, bg = sign_bg },
@@ -97,11 +100,20 @@ function M.setup()
         PmenuSbar           = { bg = c.bg.soft },
         PmenuSel            = { fg = c.bg.base, bg = c.blue.soft },
         PmenuThumb          = { bg = c.fg.dim },
+        PmenuMatch          = { fg = c.blue.light, bg = c.bg.soft,  fmt = "bold" },
+        PmenuMatchSel       = { fg = c.blue.light, bg = c.blue.soft, fmt = "bold" },
+        PmenuKind           = { fg = c.purple.soft, bg = c.bg.soft },
+        PmenuKindSel        = { fg = c.purple.soft, bg = c.blue.soft },
+        PmenuExtra          = { fg = c.fg.muted, bg = c.bg.soft },
+        PmenuExtraSel       = { fg = c.fg.muted, bg = c.blue.soft },
         WildMenu            = { fg = c.bg.base, bg = c.blue.base },
         StatusLine          = { fg = c.fg.base, bg = c.bg.muted },
         StatusLineTerm      = { fg = c.fg.base, bg = c.bg.muted },
         StatusLineNC        = { fg = c.fg.dim, bg = c.bg.soft },
         StatusLineTermNC    = { fg = c.fg.dim, bg = c.bg.soft },
+        MsgSeparator        = { fg = c.fg.muted, bg = c.bg.muted },
+        WinBar              = { fg = c.fg.base, bg = c.bg.overlay, fmt = "bold" },
+        WinBarNC            = { fg = c.fg.muted, bg = c.bg.overlay },
         TabLine             = { fg = c.fg.base, bg = c.bg.soft },
         TabLineFill         = { fg = c.fg.dim, bg = c.bg.soft },
         TabLineSel          = { fg = c.bg.base, bg = c.fg.base },
@@ -194,7 +206,7 @@ function M.setup()
         ["@string"]                   = { fg = c.yellow.sand, fmt = cfg.code_style.strings },
         ["@string.regex"]             = { fg = c.cyan.base, fmt = cfg.code_style.strings },
         ["@string.regexp"]            = { fg = c.cyan.base, fmt = cfg.code_style.strings },
-        ["@string.escape"]            = { fg = c.cyan.light, fmt = cfg.code_style.strings },
+        ["@string.escape"]            = { fg = c.cyan.mint, fmt = cfg.code_style.strings },
         ["@string.special"]           = { fg = c.cyan.pale },
         ["@character"]                = { fg = c.orange.warm },
         ["@character.special"]        = { fg = c.cyan.base },
@@ -243,7 +255,7 @@ function M.setup()
         ["@comment"]                  = { fg = c.fg.muted, fmt = cfg.code_style.comments },
         ["@comment.error"]            = { fg = c.red.base, bg = c.bg.soft, fmt = "bold" },
         ["@comment.warning"]          = { fg = c.orange.base, bg = c.bg.soft, fmt = "bold" },
-        ["@comment.todo"]             = { fg = c.yellow.base, bg = c.bg.soft, fmt = "bold" },
+        ["@comment.todo"]             = { fg = c.yellow.warm, bg = c.bg.soft, fmt = "bold" },
         ["@comment.note"]             = { fg = c.cyan.base, bg = c.bg.soft, fmt = "bold" },
 
         -- Tags (HTML/JSX/etc.)
@@ -260,9 +272,9 @@ function M.setup()
         ["@markup.heading.6"]         = { fg = c.red.light, fmt = "bold" },
         ["@markup.link"]              = { fg = c.blue.base, fmt = "underline" },
         ["@markup.link.label"]        = { fg = c.blue.light },
-        ["@markup.link.url"]          = { fg = c.blue.deep, fmt = "underline" },
+        ["@markup.link.url"]          = { fg = c.fg.accent, fmt = "underline" },
         ["@markup.list"]              = { fg = c.cyan.base },
-        ["@markup.list.checked"]      = { fg = c.green.base },
+        ["@markup.list.checked"]      = { fg = c.green.lime },
         ["@markup.list.unchecked"]    = { fg = c.fg.muted },
         ["@markup.strong"]            = { fmt = "bold" },
         ["@markup.italic"]            = { fmt = "italic" },
@@ -275,13 +287,13 @@ function M.setup()
         ["@markup.environment"]       = { fg = c.purple.pink },
 
         -- Diff captures
-        ["@diff.plus"]                = { fg = c.green.base, bg = c.diff.add },
-        ["@diff.minus"]               = { fg = c.red.base,   bg = c.diff.delete },
+        ["@diff.plus"]                = { fg = c.green.neon, bg = c.diff.add },
+        ["@diff.minus"]               = { fg = c.red.deep,   bg = c.diff.delete },
         ["@diff.delta"]               = { fg = c.blue.base,  bg = c.diff.change },
 
         -- Namespaces / modules
-        ["@module"]                   = { fg = c.green.light },
-        ["@namespace"]                = { fg = c.green.light },
+        ["@module"]                   = { fg = c.green.leaf },
+        ["@namespace"]                = { fg = c.green.leaf },
         ["@label"]                    = { fg = c.purple.pink },
 
         -- None / error
@@ -293,7 +305,7 @@ function M.setup()
     -- LSP semantic tokens (refine treesitter where the server provides them)
     ------------------------------------------------------------------
     apply {
-        ["@lsp.type.namespace"]                    = { fg = c.green.light },
+        ["@lsp.type.namespace"]                    = { fg = c.green.leaf },
         ["@lsp.type.type"]                         = { fg = c.purple.light },
         ["@lsp.type.class"]                        = { fg = c.purple.light },
         ["@lsp.type.enum"]                         = { fg = c.purple.soft },
@@ -314,7 +326,7 @@ function M.setup()
         ["@lsp.type.number"]                       = { fg = c.orange.base },
         ["@lsp.type.regexp"]                       = { fg = c.cyan.base },
         ["@lsp.type.operator"]                     = { fg = c.yellow.sand },
-        ["@lsp.type.decorator"]                    = { fg = c.blue.darker },
+        ["@lsp.type.decorator"]                    = { fg = c.purple.deep },
         ["@lsp.type.builtinType"]                  = { fg = c.purple.soft },
         ["@lsp.type.selfKeyword"]                  = { fg = c.orange.deep, fmt = cfg.code_style.variables },
         ["@lsp.type.selfTypeKeyword"]              = { fg = c.purple.soft },
@@ -350,7 +362,7 @@ function M.setup()
         DiagnosticWarn                 = { fg = diag_warn },
         DiagnosticInfo                 = { fg = diag_info },
         DiagnosticHint                 = { fg = diag_hint },
-        DiagnosticOk                   = { fg = c.green.base },
+        DiagnosticOk                   = { fg = c.green.deep },
         DiagnosticVirtualTextError     = { fg = diag_error, bg = vt_bg(diag_error) },
         DiagnosticVirtualTextWarn      = { fg = diag_warn,  bg = vt_bg(diag_warn)  },
         DiagnosticVirtualTextInfo      = { fg = diag_info,  bg = vt_bg(diag_info)  },
@@ -375,7 +387,7 @@ function M.setup()
         LspReferenceWrite              = { bg = c.bg.muted },
         LspCodeLens                    = { fg = c.fg.muted, fmt = cfg.code_style.comments },
         LspCodeLensSeparator           = { fg = c.fg.dim },
-        LspInlayHint                   = { fg = c.fg.dim, bg = c.bg.soft, fmt = "italic" },
+        LspInlayHint                   = { fg = c.green.dim, bg = c.bg.soft, fmt = "italic" },
     }
 
     ------------------------------------------------------------------
@@ -446,6 +458,62 @@ function M.setup()
         CmpItemKindEvent               = { fg = c.red.light },
         CmpItemKindOperator            = { fg = c.yellow.sand },
         CmpItemKindTypeParameter       = { fg = c.purple.soft },
+    }
+
+    ------------------------------------------------------------------
+    -- blink.cmp
+    ------------------------------------------------------------------
+    apply {
+        BlinkCmpMenu                           = { fg = c.fg.base,    bg = float_bg },
+        BlinkCmpMenuBorder                     = { fg = c.fg.muted,   bg = float_bg },
+        BlinkCmpMenuSelection                  = { fg = c.fg.base,    bg = c.bg.surface },
+        BlinkCmpScrollBarThumb                 = { bg = c.fg.dim },
+        BlinkCmpScrollBarGutter                = { bg = c.bg.soft },
+
+        BlinkCmpLabel                          = { fg = c.fg.base },
+        BlinkCmpLabelDeprecated                = { fg = c.fg.dim, fmt = "strikethrough" },
+        BlinkCmpLabelMatch                     = { fg = c.blue.light, fmt = "bold" },
+        BlinkCmpLabelDetail                    = { fg = c.fg.muted },
+        BlinkCmpLabelDescription               = { fg = c.fg.muted, fmt = "italic" },
+
+        BlinkCmpKind                           = { fg = c.fg.muted },
+        BlinkCmpKindDefault                    = { fg = c.fg.muted },
+        BlinkCmpKindText                       = { fg = c.fg.base },
+        BlinkCmpKindMethod                     = { fg = c.blue.light },
+        BlinkCmpKindFunction                   = { fg = c.blue.base },
+        BlinkCmpKindConstructor                = { fg = c.green.base },
+        BlinkCmpKindField                      = { fg = c.green.olive },
+        BlinkCmpKindVariable                   = { fg = c.fg.base },
+        BlinkCmpKindClass                      = { fg = c.purple.light },
+        BlinkCmpKindInterface                  = { fg = c.purple.soft },
+        BlinkCmpKindModule                     = { fg = c.green.leaf },
+        BlinkCmpKindProperty                   = { fg = c.green.olive },
+        BlinkCmpKindUnit                       = { fg = c.orange.base },
+        BlinkCmpKindValue                      = { fg = c.orange.base },
+        BlinkCmpKindEnum                       = { fg = c.purple.soft },
+        BlinkCmpKindKeyword                    = { fg = c.purple.hot },
+        BlinkCmpKindSnippet                    = { fg = c.yellow.base },
+        BlinkCmpKindColor                      = { fg = c.cyan.pale },
+        BlinkCmpKindFile                       = { fg = c.fg.base },
+        BlinkCmpKindReference                  = { fg = c.fg.muted },
+        BlinkCmpKindFolder                     = { fg = c.blue.soft },
+        BlinkCmpKindEnumMember                 = { fg = c.orange.base },
+        BlinkCmpKindConstant                   = { fg = c.orange.base },
+        BlinkCmpKindStruct                     = { fg = c.purple.light },
+        BlinkCmpKindEvent                      = { fg = c.red.light },
+        BlinkCmpKindOperator                   = { fg = c.yellow.sand },
+        BlinkCmpKindTypeParameter              = { fg = c.purple.soft },
+
+        BlinkCmpSource                         = { fg = c.fg.muted,   fmt = "italic" },
+
+        BlinkCmpDoc                            = { fg = c.fg.base,    bg = float_bg },
+        BlinkCmpDocBorder                      = { fg = c.fg.muted,   bg = float_bg },
+        BlinkCmpDocSeparator                   = { fg = c.fg.muted,   bg = float_bg },
+        BlinkCmpDocCursorLine                  = { bg = c.bg.surface },
+
+        BlinkCmpSignatureHelp                  = { fg = c.fg.base,    bg = float_bg },
+        BlinkCmpSignatureHelpBorder            = { fg = c.fg.muted,   bg = float_bg },
+        BlinkCmpSignatureHelpActiveParameter   = { fg = c.blue.light, fmt = "bold,underline" },
     }
 
     ------------------------------------------------------------------
