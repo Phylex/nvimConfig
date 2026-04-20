@@ -7,7 +7,6 @@ local default_config = {
     transparent = false,
     term_colors = true,
     ending_tildes = false,
-    cmp_itemkind_reverse = false,
 
     code_style = {
         comments  = 'italic',
@@ -25,7 +24,6 @@ local default_config = {
     highlights = {}, -- user override: applied after default highlights
 
     diagnostics = {
-        darker = true,
         undercurl = true,
         background = true,
     },

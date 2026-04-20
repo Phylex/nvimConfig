@@ -193,6 +193,7 @@ function M.setup()
         -- Strings / characters
         ["@string"]                   = { fg = c.yellow.sand, fmt = cfg.code_style.strings },
         ["@string.regex"]             = { fg = c.cyan.base, fmt = cfg.code_style.strings },
+        ["@string.regexp"]            = { fg = c.cyan.base, fmt = cfg.code_style.strings },
         ["@string.escape"]            = { fg = c.cyan.light, fmt = cfg.code_style.strings },
         ["@string.special"]           = { fg = c.cyan.pale },
         ["@character"]                = { fg = c.orange.warm },
