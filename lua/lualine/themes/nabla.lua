@@ -1,32 +1,24 @@
-local c = require('nabla.colors')
-local cfg = vim.g.nabla_config
-local colors = {
-    bg = c.bg0,
-    fg = c.fg,
-    red = c.red,
-    green = c.green,
-    yellow = c.yellow,
-    blue = c.blue,
-    purple = c.purple,
-    cyan = c.cyan,
-    gray = c.grey
-}
+local c = require('nabla').palette()
+local cfg = vim.g.nabla_config or {}
+local lualine_cfg = (cfg.lualine or {})
+local section_c_bg = lualine_cfg.transparent and 'NONE' or c.bg.soft
 
 local nabla = {
     inactive = {
-        a = {fg = colors.gray, bg = colors.bg, gui = 'bold'},
-        b = {fg = colors.gray, bg = colors.bg},
-        c = {fg = colors.gray, bg = cfg.lualine.transparent and c.none or c.bg1},
+        a = { fg = c.fg.dim,  bg = c.bg.base,   gui = 'bold' },
+        b = { fg = c.fg.dim,  bg = c.bg.base },
+        c = { fg = c.fg.dim,  bg = section_c_bg },
     },
     normal = {
-        a = {fg = colors.bg, bg = colors.green, gui = 'bold'},
-        b = {fg = colors.fg, bg = c.bg3},
-        c = {fg = colors.fg, bg = cfg.lualine.transparent and c.none or c.bg1},
+        a = { fg = c.bg.base, bg = c.green.base, gui = 'bold' },
+        b = { fg = c.fg.base, bg = c.bg.surface },
+        c = { fg = c.fg.base, bg = section_c_bg },
     },
-    visual = {a = {fg = colors.bg, bg = colors.purple, gui = 'bold'}},
-    replace = {a = {fg = colors.bg, bg = colors.red, gui = 'bold'}},
-    insert = {a = {fg = colors.bg, bg = colors.blue, gui = 'bold'}},
-    command = {a = {fg = colors.bg, bg = colors.yellow, gui = 'bold'}},
-    terminal = {a = {fg = colors.bg, bg = colors.cyan, gui = 'bold'}},
+    visual  = { a = { fg = c.bg.base, bg = c.purple.light, gui = 'bold' } },
+    replace = { a = { fg = c.bg.base, bg = c.red.base,     gui = 'bold' } },
+    insert  = { a = { fg = c.bg.base, bg = c.blue.base,    gui = 'bold' } },
+    command = { a = { fg = c.bg.base, bg = c.yellow.base,  gui = 'bold' } },
+    terminal = { a = { fg = c.bg.base, bg = c.cyan.base,   gui = 'bold' } },
 }
-return nabla;
+
+return nabla
