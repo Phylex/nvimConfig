@@ -63,6 +63,7 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Set colorscheme
 vim.opt.termguicolors = true
 require('nabla').load()
+require('nabla.inspect')
 
 
 -- Keymaps for better default experience ---------------------------------------------------
@@ -147,6 +148,17 @@ require('lazy').setup({
   {
     'nvim-lualine/lualine.nvim',
     dependencies = { 'nvim-tree/nvim-web-devicons' }
+  },
+
+  {
+    'NvChad/nvim-colorizer.lua',
+    event = { 'BufReadPost', 'BufNewFile' },
+    opts = {
+      user_default_options = {
+        names = false,
+        mode  = 'background',
+      },
+    },
   },
   {
     -- telescope is a fuzzy finder that has lots of useful features around
@@ -479,9 +491,9 @@ require('lazy').setup({
   },
 })
 
--- Set the priority of the treesitter highlights over the semantic_tokens
+-- LSP semantic tokens override treesitter captures when the server provides one.
 vim.hl.priorities.treesitter = 100
-vim.hl.priorities.semantic_tokens = 99
+vim.hl.priorities.semantic_tokens = 125
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
