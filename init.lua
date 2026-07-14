@@ -489,6 +489,25 @@ require('lazy').setup({
       require('nvim-treesitter.configs').setup(opts)
     end,
   },
+
+  {
+    'mrcjkb/rustaceanvim',
+    version = '^9',
+    lazy = false, -- plugin manages its own filetype loading
+    init = function()
+      vim.g.rustaceanvim = {
+        server = {
+          -- reuse blink.cmp completion capabilities, same as the other servers
+          capabilities = require('blink.cmp').get_lsp_capabilities(),
+          default_settings = {
+            ['rust-analyzer'] = {
+              check = { command = 'clippy' }, -- lint with clippy on save
+            },
+          },
+        },
+      }
+    end,
+  },
 })
 
 -- LSP semantic tokens override treesitter captures when the server provides one.
