@@ -234,8 +234,8 @@ function M.setup()
 
         -- Keywords
         ["@keyword"]                        = { fg = c.orange.deep, fmt = cfg.code_style.keywords },
-        ["@keyword.function"]               = { fg = c.red.base, fmt = cfg.code_style.keywords },
-        ["@keyword.operator"]               = { fg = c.blue.light, fmt = cfg.code_style.keywords },
+        ["@keyword.function"]               = { fg = c.blue.cobalt, fmt = cfg.code_style.keywords },
+        ["@keyword.operator"]               = { fg = c.cyan.base, fmt = cfg.code_style.keywords },
         ["@keyword.return"]                 = { fg = c.purple.deep, fmt = cfg.code_style.keywords },
         ["@keyword.conditional"]            = { fg = c.purple.hot, fmt = cfg.code_style.keywords },
         ["@keyword.conditional.ternary"]    = { fg = c.purple.fuchsia },  -- falls through to @keyword.conditional

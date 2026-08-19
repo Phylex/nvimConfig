@@ -144,6 +144,7 @@ require('lazy').setup({
       },
     },
   },
+  'HallerPatrick/py_lsp.nvim',
 
   {
     'nvim-lualine/lualine.nvim',
@@ -317,6 +318,7 @@ require('lazy').setup({
     end
   },
 
+
   { -- Autocompletion
     'saghen/blink.cmp',
     event = 'VimEnter',
@@ -417,76 +419,53 @@ require('lazy').setup({
   },
 
   {
+    -- The `main` branch is a full rewrite and the only one that supports Nvim 0.12:
+    -- `master` is locked to 0.11 and its query directives crash on 0.12's
+    -- quantified-capture API (`match[id]` is now a node *list*).
     'nvim-treesitter/nvim-treesitter',
+    branch = 'main',
+    lazy = false, -- the rewrite does not support lazy-loading
     build = ':TSUpdate',
-    opts = {
-      ensure_installed = { 'c', 'wgsl', 'cpp', 'html', 'toml', 'lua', 'python', 'rust', 'vim', 'markdown', 'xml' },
+    config = function()
+      local ts = require 'nvim-treesitter'
+      ts.setup {} -- parsers land in stdpath('data')/site, prepended to runtimepath
 
-      auto_install = true,
-      highlight = {
-        enable = true,
-        additional_vim_regex_highlighting= { 'xml', 'kcd' },
-      },
-      indent = {
-        enable = true,
-      },
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = '<c-space>',
-          node_incremental = '<c-space>',
-          scope_incremental = '<c-s>',
-          node_decremental = '<c-backspace>',
-        },
-      },
-      textobjects = {
-        select = {
-          enable = true,
-          lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
-          keymaps = {
-            -- You can use the capture groups defined in textobjects.scm
-            ['aa'] = '@parameter.outer',
-            ['ia'] = '@parameter.inner',
-            ['af'] = '@function.outer',
-            ['if'] = '@function.inner',
-            ['ac'] = '@class.outer',
-            ['ic'] = '@class.inner',
-          },
-        },
-        move = {
-          enable = true,
-          set_jumps = true, -- whether to set jumps in the jumplist
-          goto_next_start = {
-            [']m'] = '@function.outer',
-            [']]'] = '@class.outer',
-          },
-          goto_next_end = {
-            [']M'] = '@function.outer',
-            [']['] = '@class.outer',
-          },
-          goto_previous_start = {
-            ['[m'] = '@function.outer',
-            ['[['] = '@class.outer',
-          },
-          goto_previous_end = {
-            ['[M'] = '@function.outer',
-            ['[]'] = '@class.outer',
-          },
-        },
-        swap = {
-          enable = true,
-          swap_next = {
-            ['<leader>a'] = '@parameter.inner',
-          },
-          swap_previous = {
-            ['<leader>A'] = '@parameter.inner',
-          },
-        },
-      },
-    },
-    config = function(_, opts)
-      require('nvim-treesitter.install').prefer_git = true
-      require('nvim-treesitter.configs').setup(opts)
+      ts.install {
+        'c', 'wgsl', 'cpp', 'html', 'toml', 'lua', 'python', 'rust', 'vim',
+        'markdown', 'markdown_inline', 'xml', 'query',
+      }
+
+      -- The rewrite provides parsers and queries only; enabling per-buffer
+      -- features is now our job (replaces the old highlight/indent options).
+      local regex_fallback = { xml = true } -- keep legacy syntax on top of treesitter
+      vim.api.nvim_create_autocmd('FileType', {
+        desc = 'Start treesitter highlighting and indentation',
+        callback = function(args)
+          local lang = vim.treesitter.language.get_lang(args.match)
+          if not lang or not vim.list_contains(ts.get_available(), lang) then
+            return
+          end
+          if not vim.list_contains(ts.get_installed(), lang) then
+            ts.install(lang) -- async: highlighting kicks in on the next buffer
+            return
+          end
+          if not pcall(vim.treesitter.start, args.buf, lang) then
+            return
+          end
+          vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+          if regex_fallback[args.match] then
+            vim.bo[args.buf].syntax = 'on'
+          end
+        end,
+      })
+
+      -- Incremental selection moved into Nvim (`:h v_an`); keep the old bindings.
+      vim.keymap.set({ 'n', 'x' }, '<c-space>', function()
+        vim.treesitter.select 'parent'
+      end, { desc = 'Expand selection to parent node' })
+      vim.keymap.set('x', '<c-backspace>', function()
+        vim.treesitter.select 'child'
+      end, { desc = 'Shrink selection to child node' })
     end,
   },
 
