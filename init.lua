@@ -487,6 +487,33 @@ require('lazy').setup({
       }
     end,
   },
+
+  -- Code completion as ghost text (fill in the middle) from llama-server on
+  -- Ganymede. The API key is per machine and stays out of this repo: only
+  -- machines with the key file load the plugin.
+  {
+    'ggml-org/llama.vim',
+    cond = function()
+      return vim.uv.fs_stat(vim.fn.expand '~/.local/state/llama/api-key') ~= nil
+    end,
+    init = function()
+      local key = vim.fn.readfile(vim.fn.expand '~/.local/state/llama/api-key', '', 1)[1] or ''
+      vim.g.llama_config = {
+        endpoint_fim = 'https://complete.radiation.systems/infill',
+        api_key = vim.trim(key),
+        -- blink.cmp's default preset has <Tab>/<S-Tab> for snippets
+        keymap_fim_accept_full = '<M-CR>',
+        keymap_fim_accept_line = '<M-l>',
+        keymap_fim_accept_word = '<M-w>',
+        -- only /infill is served, no instruction editing
+        keymap_inst_trigger = '',
+        keymap_inst_rerun = '',
+        keymap_inst_continue = '',
+        keymap_inst_accept = '',
+        keymap_inst_cancel = '',
+      }
+    end,
+  },
 })
 
 -- LSP semantic tokens override treesitter captures when the server provides one.
