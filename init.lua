@@ -349,6 +349,11 @@ require('lazy').setup({
           -- },
         },
         opts = {},
+        config = function(_, opts)
+          require('luasnip').setup(opts)
+          -- own snippets in snipmate format from <config>/snippets/<filetype>.snippets
+          require('luasnip.loaders.from_snipmate').lazy_load()
+        end,
       },
       'folke/lazydev.nvim',
     },
@@ -502,7 +507,7 @@ require('lazy').setup({
         endpoint_fim = 'https://complete.radiation.systems/infill',
         api_key = vim.trim(key),
         -- blink.cmp's default preset has <Tab>/<S-Tab> for snippets
-        keymap_fim_accept_full = '<M-CR>',
+        keymap_fim_accept_full = '<M-y>',
         keymap_fim_accept_line = '<M-l>',
         keymap_fim_accept_word = '<M-w>',
         -- only /infill is served, no instruction editing
